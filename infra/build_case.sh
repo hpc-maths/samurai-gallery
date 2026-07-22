@@ -21,6 +21,15 @@ ROOT=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
 BASE_PATH="$PATH"
 MAMBA_ROOT="${MAMBA_ROOT_PREFIX:-$HOME/micromamba}"
 
+# Where per-ref samurai installs and engine checkouts are cached, so cases
+# sharing a ref (and successive CI runs) reuse a single build.
+CACHE_ROOT="${SAMURAI_GALLERY_CACHE:-$HOME/.cache/samurai-gallery}"
+SAMURAI_INSTALL_ROOT="${SAMURAI_INSTALL_ROOT:-$CACHE_ROOT/installs}"
+ENGINE_SRC_ROOT="${ENGINE_SRC_ROOT:-$CACHE_ROOT/engines}"
+
+# Turn a git repo/ref into a filesystem-safe token.
+sanitize() { printf '%s' "$1" | tr '/:@ ' '____'; }
+
 # Deterministic environment activation (works inside a non-interactive script,
 # where the `micromamba` shell function may be unavailable). Switches cleanly
 # between environments so an engine case can build/run in one env and render in
@@ -57,10 +66,28 @@ rm -rf "$OUT_DIR" "$CASE_DIR/build"
 mkdir -p "$OUT_DIR"
 
 # ---- build + run (in the case's env) -------------------------------------
-activate "$ENV"
+if [ -n "$IS_ENGINE" ]; then
+    # Clone the engine project at the tested ref (cached per repo+ref).
+    ENGINE_SRC="$ENGINE_SRC_ROOT/$(sanitize "$ENGINE_REPO")-$(sanitize "$ENGINE_REF")"
+    case "$ENGINE_REPO" in
+        *://*|git@*|/*|.*) ENGINE_URL="$ENGINE_REPO" ;;
+        *) ENGINE_URL="https://github.com/${ENGINE_REPO}.git" ;;
+    esac
+    if [ "$(cat "$ENGINE_SRC/.engine-ref" 2>/dev/null || true)" != "$ENGINE_REF" ]; then
+        echo ">> cloning engine $ENGINE_REPO@$ENGINE_REF"
+        rm -rf "$ENGINE_SRC"
+        git clone --filter=blob:none "$ENGINE_URL" "$ENGINE_SRC" >/dev/null 2>&1
+        git -C "$ENGINE_SRC" checkout --detach "$ENGINE_REF" >/dev/null 2>&1
+        echo "$ENGINE_REF" > "$ENGINE_SRC/.engine-ref"
+    fi
 
-if [ -n "$ENGINE_SOURCE" ]; then
-    ENGINE_SRC=$(cd "$ROOT/$ENGINE_SOURCE" && pwd)
+    # Create the engine environment from the checkout if it is missing.
+    if [ ! -d "$MAMBA_ROOT/envs/$ENV" ]; then
+        echo ">> creating engine env '$ENV' from $ENGINE_SRC/conda/environment.yml"
+        micromamba create -y -n "$ENV" -f "$ENGINE_SRC/conda/environment.yml"
+    fi
+
+    activate "$ENV"
     BUILD_DIR="$CASE_DIR/build-engine"
     echo ">> building engine target '$TARGET' from $ENGINE_SRC"
     cmake -S "$ENGINE_SRC" -B "$BUILD_DIR" \
@@ -69,11 +96,16 @@ if [ -n "$ENGINE_SOURCE" ]; then
     cmake --build "$BUILD_DIR" --target "$TARGET" -j4
     EXE=$(find "$BUILD_DIR" -name "$TARGET" -type f -perm -111 | head -1)
 else
+    # Build samurai at the tested ref (cached per ref), then the case against it.
+    activate "$ENV"
+    SAMURAI_PREFIX="$SAMURAI_INSTALL_ROOT/$(sanitize "$SAMURAI_REF")"
+    bash "$ROOT/infra/ensure_samurai.sh" "$SAMURAI_REPO" "$SAMURAI_REF" "$SAMURAI_PREFIX"
+
     BUILD_DIR="$CASE_DIR/build"
-    echo ">> configuring and building target '$TARGET'"
+    echo ">> configuring and building target '$TARGET' (samurai $SAMURAI_REF)"
     cmake -S "$CASE_DIR" -B "$BUILD_DIR" -G Ninja \
         -DCMAKE_BUILD_TYPE=Release \
-        -DCMAKE_PREFIX_PATH="${CONDA_PREFIX:-}" >/dev/null
+        -DCMAKE_PREFIX_PATH="$SAMURAI_PREFIX;${CONDA_PREFIX:-}" >/dev/null
     cmake --build "$BUILD_DIR" --target "$TARGET"
     EXE="$BUILD_DIR/$TARGET"
 fi
@@ -82,7 +114,7 @@ echo ">> running simulation"
 # Run inside OUT_DIR so executables that write to a fixed subdirectory
 # (e.g. samurai-euler's "results") land under the case output dir.
 # shellcheck disable=SC2086
-if [ -n "$ENGINE_SOURCE" ]; then
+if [ -n "$IS_ENGINE" ]; then
     # Engine executables own their output naming; only --nfiles is common.
     ( cd "$OUT_DIR" && "$EXE" $ARGS --nfiles "$NFILES" )
 else

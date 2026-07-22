@@ -41,6 +41,10 @@ export interface GalleryCase {
   codeFile: string;
   /** name of the external engine powering this case, if any */
   engine: string | null;
+  /** samurai git ref this case is tested against (local cases) */
+  samuraiRef: string | null;
+  /** engine git ref this case is tested against (engine cases) */
+  engineRef: string | null;
   /** site-relative, theme-specific media paths (populated by collect-media) */
   thumbnailDarkUrl: string;
   thumbnailLightUrl: string;
@@ -71,6 +75,12 @@ export function getCases(): GalleryCase[] {
       // Displayed code: a local main.cpp, or the engine scenario file.
       const engine = meta.engine ?? null;
       const codeFile = engine?.code_file ?? "main.cpp";
+      // Engine name shown on the site: the repo's last path segment.
+      const engineName = engine?.repo
+        ? engine.repo.split("/").pop()!.replace(/\.git$/, "")
+        : engine
+          ? "engine"
+          : null;
 
       cases.push({
         id: `${category}/${slug}`,
@@ -91,7 +101,9 @@ export function getCases(): GalleryCase[] {
         readme: readIfExists(path.join(dir, "README.md")),
         code: readIfExists(path.join(dir, codeFile)),
         codeFile,
-        engine: engine?.source ? engine.source.replace(/^\.\.\//, "") : engine ? "engine" : null,
+        engine: engineName,
+        samuraiRef: meta.samurai?.ref ?? null,
+        engineRef: engine?.ref ?? null,
         thumbnailDarkUrl: `${mediaBase}/thumbnail-dark.png`,
         thumbnailLightUrl: `${mediaBase}/thumbnail-light.png`,
         heroDarkUrl: `${mediaBase}/preview-dark.mp4`,

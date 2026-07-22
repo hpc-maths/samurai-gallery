@@ -24,9 +24,10 @@ references:
 media:
   thumbnail: thumbnail.png
   hero: preview.mp4
-env: samurai-euler-env
 engine:
-  source: ../samurai-euler
+  repo: hpc-maths/samurai-euler
+  ref: gallery-scenarios
+  env: samurai-euler-env
   code_file: scenario.hpp
 run:
   target: euler_2d

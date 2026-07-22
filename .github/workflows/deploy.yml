@@ -9,13 +9,11 @@ on:
     branches: [main]
   workflow_dispatch:
 
-# Pin the upstream dependencies here for reproducible builds.
+# samurai and engine versions are pinned per case in each case.yaml
+# (samurai.ref / engine.repo+ref). infra/build_case.sh builds each ref on
+# demand and caches it under ~/.cache/samurai-gallery, so cases can be tested
+# against different samurai versions.
 env:
-  SAMURAI_REPO: hpc-maths/samurai
-  SAMURAI_REF: "" # empty = default branch; set a tag/commit to pin
-  SAMURAI_EULER_REPO: hpc-maths/samurai-euler
-  # The Euler engine cases (Kelvin-Helmholtz, Sedov, ...) live on this ref.
-  SAMURAI_EULER_REF: gallery-scenarios
   BASE_PATH: /samurai-gallery
   SITE_URL: https://hpc-maths.github.io
 
@@ -38,45 +36,22 @@ jobs:
       - name: Checkout gallery
         uses: actions/checkout@v4
 
-      - name: Clone samurai (source, for the finite-volume cases)
-        run: |
-          git clone --filter=blob:none "https://github.com/${SAMURAI_REPO}.git" "${GITHUB_WORKSPACE}/../samurai-src"
-          if [ -n "${SAMURAI_REF}" ]; then
-            git -C "${GITHUB_WORKSPACE}/../samurai-src" checkout "${SAMURAI_REF}"
-          fi
-
-      - name: Clone samurai-euler (engine, for the compressible-Euler cases)
-        continue-on-error: true
-        run: |
-          git clone --filter=blob:none "https://github.com/${SAMURAI_EULER_REPO}.git" "${GITHUB_WORKSPACE}/../samurai-euler"
-          git -C "${GITHUB_WORKSPACE}/../samurai-euler" checkout "${SAMURAI_EULER_REF}" \
-            || echo "ref ${SAMURAI_EULER_REF} not found; using default branch (Euler cases may be skipped)"
-
       - name: Set up micromamba (samurai-gallery env)
         uses: mamba-org/setup-micromamba@v2
         with:
           environment-file: environment.yml
           cache-environment: true
 
-      - name: Build and install samurai into the gallery env
-        continue-on-error: true
-        shell: bash -el {0}
-        run: |
-          PREFIX="${MAMBA_ROOT_PREFIX}/envs/samurai-gallery"
-          micromamba run -n samurai-gallery cmake -S "${GITHUB_WORKSPACE}/../samurai-src" -B /tmp/samurai-build \
-            -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX="${PREFIX}" \
-            -DBUILD_DEMOS=OFF -DBUILD_TESTS=OFF
-          micromamba run -n samurai-gallery cmake --install /tmp/samurai-build
-
-      - name: Create the Euler engine env (samurai-euler-env)
-        continue-on-error: true
-        run: |
-          EULER_ENV_FILE="${GITHUB_WORKSPACE}/../samurai-euler/conda/environment.yml"
-          if [ -f "${EULER_ENV_FILE}" ]; then
-            micromamba create -y -n samurai-euler-env -f "${EULER_ENV_FILE}"
-          else
-            echo "no samurai-euler env file; Euler cases will be skipped"
-          fi
+      # Per-ref samurai installs and engine checkouts. The key includes a hash
+      # of every case.yaml, so bumping any samurai.ref / engine.ref rebuilds
+      # only what changed on the next run.
+      - name: Cache samurai builds (per ref)
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/samurai-gallery
+          key: samurai-gallery-${{ hashFiles('cases/*/*/case.yaml') }}
+          restore-keys: |
+            samurai-gallery-
 
       - name: Build, run and render every case
         shell: bash -el {0}

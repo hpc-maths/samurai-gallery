@@ -48,6 +48,13 @@ def validate_case(case_yaml: Path, validator: Draft7Validator) -> list[str]:
         if not (case_yaml.parent / engine["code_file"]).exists():
             errors.append(f"{rel}: engine.code_file '{engine['code_file']}' not found")
 
+    # Local cases must pin the samurai version they are tested against; engine
+    # cases pin samurai through their engine environment instead.
+    if not engine:
+        samurai = meta.get("samurai") if isinstance(meta, dict) else None
+        if not (isinstance(samurai, dict) and samurai.get("ref")):
+            errors.append(f"{rel}: missing 'samurai.ref' (samurai version this case is tested against)")
+
     return errors
 
 

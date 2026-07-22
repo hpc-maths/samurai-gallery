@@ -34,6 +34,8 @@ def main() -> int:
     parser.add_argument("--slug", required=True, help="kebab-case case id, e.g. kelvin-helmholtz")
     parser.add_argument("--title", required=True, help="human-readable title")
     parser.add_argument("--equation", default="TODO", help="equation slug, e.g. compressible-euler")
+    parser.add_argument("--samurai-ref", default="main",
+                        help="samurai git ref this case is tested against, e.g. v0.33.0")
     args = parser.parse_args()
 
     if not SLUG_RE.match(args.slug):
@@ -50,6 +52,7 @@ def main() -> int:
         "__SLUG__": args.slug,
         "__TARGET__": f"gallery-{args.slug}",
         "__EQUATION__": args.equation,
+        "__SAMURAI_REF__": args.samurai_ref,
     }
 
     dest.mkdir(parents=True)
