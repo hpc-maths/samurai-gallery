@@ -61,6 +61,41 @@ eval "$(python "$ROOT/infra/case_meta.py" "$CASE_DIR/case.yaml" "$PROFILE")"
 echo ">> case:    $CASE_DIR"
 echo ">> profile: $PROFILE (env: $ENV)"
 
+# ---- cache lookup --------------------------------------------------------
+# Skip compile+run+render when nothing that affects the media has changed:
+# the samurai/engine version, the case sources, and the shared figure engine
+# and scripts are hashed into a content-addressed key (see infra/cache.py).
+# Escape hatches: GALLERY_NO_CACHE=1 bypasses the cache entirely;
+# GALLERY_CACHE_REFRESH=1 forces a rebuild but still repopulates the store.
+CACHE_DIR="${GALLERY_CACHE_DIR:-$ROOT/.cache/media}"
+MEDIA_FILES=(thumbnail-dark.png thumbnail-light.png preview-dark.mp4 preview-light.mp4)
+
+entry_complete() {
+    local entry="$1"
+    [ -d "$entry" ] || return 1
+    local f
+    for f in "${MEDIA_FILES[@]}"; do
+        [ -f "$entry/$f" ] || return 1
+    done
+    return 0
+}
+
+CACHE_KEY=""
+CACHE_ENTRY=""
+if [ "${GALLERY_NO_CACHE:-0}" != "1" ]; then
+    CACHE_KEY=$(python "$ROOT/infra/cache.py" key "$CASE_DIR" "$PROFILE")
+    CACHE_ENTRY="$CACHE_DIR/$CACHE_KEY"
+    if [ "${GALLERY_CACHE_REFRESH:-0}" != "1" ] && entry_complete "$CACHE_ENTRY"; then
+        echo ">> cache hit ($CACHE_KEY) - restoring media, skipping build/run/render"
+        for f in "${MEDIA_FILES[@]}"; do
+            cp "$CACHE_ENTRY/$f" "$CASE_DIR/$f"
+        done
+        ls -1 "$CASE_DIR"/*.png "$CASE_DIR"/*.mp4 2>/dev/null || true
+        exit 0
+    fi
+    echo ">> cache miss ($CACHE_KEY)"
+fi
+
 OUT_DIR="$CASE_DIR/.output"
 rm -rf "$OUT_DIR" "$CASE_DIR/build"
 mkdir -p "$OUT_DIR"
@@ -103,9 +138,14 @@ else
 
     BUILD_DIR="$CASE_DIR/build"
     echo ">> configuring and building target '$TARGET' (samurai $SAMURAI_REF)"
+    # samurai's exported CMake target does not always advertise its own include
+    # directory (the installed samurai::samurai omits INTERFACE_INCLUDE_DIRECTORIES),
+    # so add the per-ref prefix include explicitly. Harmless when the target does
+    # export it. -isystem keeps samurai's headers out of the case's warnings.
     cmake -S "$CASE_DIR" -B "$BUILD_DIR" -G Ninja \
         -DCMAKE_BUILD_TYPE=Release \
-        -DCMAKE_PREFIX_PATH="$SAMURAI_PREFIX;${CONDA_PREFIX:-}" >/dev/null
+        -DCMAKE_PREFIX_PATH="$SAMURAI_PREFIX;${CONDA_PREFIX:-}" \
+        -DCMAKE_CXX_FLAGS="-isystem $SAMURAI_PREFIX/include" >/dev/null
     cmake --build "$BUILD_DIR" --target "$TARGET"
     EXE="$BUILD_DIR/$TARGET"
 fi
@@ -134,3 +174,13 @@ echo ">> generating media"
 
 echo ">> done. media written to $CASE_DIR"
 ls -1 "$CASE_DIR"/*.png "$CASE_DIR"/*.mp4 2>/dev/null || true
+
+# ---- populate cache ------------------------------------------------------
+if [ "${GALLERY_NO_CACHE:-0}" != "1" ] && [ -n "$CACHE_ENTRY" ]; then
+    mkdir -p "$CACHE_ENTRY"
+    for f in "${MEDIA_FILES[@]}"; do
+        [ -f "$CASE_DIR/$f" ] && cp "$CASE_DIR/$f" "$CACHE_ENTRY/$f"
+    done
+    python "$ROOT/infra/cache.py" manifest "$CASE_DIR" "$PROFILE" > "$CACHE_ENTRY/manifest.json"
+    echo ">> cached media under $CACHE_ENTRY"
+fi

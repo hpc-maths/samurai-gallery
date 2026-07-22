@@ -53,12 +53,27 @@ jobs:
           restore-keys: |
             samurai-gallery-
 
+      # Rendered media, content-addressed per case by infra/cache.py: build_case.sh
+      # skips compile+run+render and restores the media whenever a case's inputs
+      # (its pinned samurai/engine ref, sources, and the figure engine/scripts)
+      # are unchanged. Saved under a run-unique key and restored via the prefix;
+      # obsolete entries age out under GitHub's LRU cache eviction.
+      - name: Cache rendered media (per case)
+        uses: actions/cache@v4
+        with:
+          path: .cache/media
+          key: gallery-media-${{ github.sha }}
+          restore-keys: |
+            gallery-media-
+
       - name: Build, run and render every case
         shell: bash -el {0}
         run: |
           fail=""
+          total=0
           for d in cases/*/*/; do
             [ -f "${d}case.yaml" ] || continue
+            total=$((total + 1))
             echo "::group::${d}"
             if bash infra/build_case.sh "${d}" ci; then
               echo "OK ${d}"
@@ -68,7 +83,19 @@ jobs:
             fi
             echo "::endgroup::"
           done
-          [ -z "${fail}" ] && echo "all cases rendered" || echo "cases without media:${fail}"
+          # Non-fatal: the site still deploys with placeholders for any gap, but a
+          # broken build must not pass unnoticed - surface it in the job summary.
+          if [ -n "${fail}" ]; then
+            nfail=$(echo ${fail} | wc -w)
+            {
+              echo "## :warning: ${nfail}/${total} case(s) failed to build or render";
+              echo;
+              for d in ${fail}; do echo "- \`${d}\`"; done
+            } >> "$GITHUB_STEP_SUMMARY"
+            echo "::warning::${nfail}/${total} cases without media:${fail}"
+          else
+            echo "### :white_check_mark: All ${total} cases rendered" >> "$GITHUB_STEP_SUMMARY"
+          fi
 
       - name: Set up Node
         uses: actions/setup-node@v4

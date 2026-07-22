@@ -1,0 +1,95 @@
+name: build
+
+# Pull-request gate: build, run and render only the cases a PR actually
+# affects, and fail if any of them breaks. "Affected" = a case whose own files
+# changed, or - when a shared input changes (the figure engine/scripts or the
+# environment) - every case, matching what invalidates the media-cache keys.
+#
+# Both caches are restored read-only, so unaffected work is reused and a PR
+# never writes to the caches consumed by the deploy on main:
+#   - per-ref samurai/engine builds  (~/.cache/samurai-gallery)
+#   - rendered media                 (.cache/media, via infra/cache.py)
+# An affected case is a cache miss by construction and is genuinely rebuilt;
+# a case flagged by the diff but whose media key is unchanged (e.g. a README
+# edit) is restored from the media cache and verified for free.
+on:
+  pull_request:
+
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  affected:
+    runs-on: ubuntu-latest
+    outputs:
+      cases: ${{ steps.detect.outputs.cases }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - id: detect
+        name: Detect affected cases
+        run: |
+          base="origin/${{ github.base_ref }}"
+          changed=$(git diff --name-only "$base"...HEAD)
+          echo "Changed files:"; echo "$changed"
+
+          # A change to any shared input affects every case.
+          shared='^(infra/galleria/|infra/case_meta\.py|infra/build_case\.sh|infra/cache\.py|infra/ensure_samurai\.sh|environment\.yml)'
+          if printf '%s\n' "$changed" | grep -qE "$shared"; then
+            echo "Shared input changed -> all cases."
+            cases=$(for d in cases/*/*/; do [ -f "${d}case.yaml" ] && printf '%s\n' "${d%/}"; done)
+          else
+            cases=$(printf '%s\n' "$changed" | grep -E '^cases/[^/]+/[^/]+/' \
+                    | sed -E 's#^(cases/[^/]+/[^/]+)/.*#\1#' | sort -u \
+                    | while read -r d; do [ -f "$d/case.yaml" ] && echo "$d"; done)
+          fi
+
+          echo "Affected cases:"; echo "${cases:-<none>}"
+          if [ -z "$cases" ]; then
+            json='[]'
+          else
+            json=$(printf '%s\n' "$cases" | jq -R . | jq -cs .)
+          fi
+          echo "cases=$json" >> "$GITHUB_OUTPUT"
+
+  build:
+    needs: affected
+    if: needs.affected.outputs.cases != '[]'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        case: ${{ fromJSON(needs.affected.outputs.cases) }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up micromamba (samurai-gallery env)
+        uses: mamba-org/setup-micromamba@v2
+        with:
+          environment-file: environment.yml
+          cache-environment: true
+
+      # Read-only: reuse the per-ref builds and media the deploy on main produced;
+      # a bumped ref or changed case is simply a miss and is built fresh here.
+      - name: Restore samurai builds (per ref)
+        uses: actions/cache/restore@v4
+        with:
+          path: ~/.cache/samurai-gallery
+          key: samurai-gallery-${{ hashFiles('cases/*/*/case.yaml') }}
+          restore-keys: |
+            samurai-gallery-
+
+      - name: Restore rendered media
+        uses: actions/cache/restore@v4
+        with:
+          path: .cache/media
+          key: gallery-media-${{ github.sha }}
+          restore-keys: |
+            gallery-media-
+
+      - name: Build, run and render ${{ matrix.case }}
+        shell: bash -el {0}
+        run: bash infra/build_case.sh "${{ matrix.case }}" ci

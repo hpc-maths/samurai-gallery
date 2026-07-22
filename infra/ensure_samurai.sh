@@ -26,7 +26,11 @@ case "$REPO" in
 esac
 
 MARKER="$PREFIX/.samurai-ref"
-if [ -f "$MARKER" ] && [ "$(cat "$MARKER")" = "$REF" ]; then
+# A core header that must be present for the install to be usable. Guards against
+# a previously cached but incomplete install (e.g. config written, headers not):
+# such a prefix is treated as a miss and rebuilt rather than trusted.
+SENTINEL="$PREFIX/include/samurai/algorithm.hpp"
+if [ -f "$MARKER" ] && [ "$(cat "$MARKER")" = "$REF" ] && [ -f "$SENTINEL" ]; then
     echo ">> samurai $REF already installed at $PREFIX"
     exit 0
 fi
@@ -50,6 +54,13 @@ cmake -S "$SRC" -B "$BUILD" \
     -DCMAKE_PREFIX_PATH="${CONDA_PREFIX:-}" \
     -DBUILD_DEMOS=OFF -DBUILD_TESTS=OFF >/dev/null
 cmake --install "$BUILD" >/dev/null
+
+# Fail loudly on an incomplete install rather than caching a broken prefix and
+# only discovering it when a case fails to find samurai's headers.
+if [ ! -f "$SENTINEL" ]; then
+    echo "!! samurai install at $PREFIX is missing headers ($SENTINEL)" >&2
+    exit 1
+fi
 
 echo "$REF" > "$MARKER"
 echo ">> samurai $REF installed at $PREFIX"

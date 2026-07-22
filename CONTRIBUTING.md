@@ -71,7 +71,7 @@ its `conda/environment.yml` if missing, and builds `run.target`:
 ```yaml
 engine:
   repo: hpc-maths/samurai-euler   # git repository
-  ref: gallery-scenarios          # tested ref
+  ref: main                       # tested ref
   env: samurai-euler-env          # conda env (provides samurai for this case)
   code_file: scenario.hpp         # source shown on the site
 ```
@@ -94,8 +94,37 @@ case into a per-ref cache under `~/.cache/samurai-gallery` and links the case
 against it - you do not install samurai into the environment yourself. See the
 README quick start.
 
+## Media cache
+
+`build_case.sh` skips compile+run+render when nothing that affects a case's
+media has changed. It computes a content-addressed key (`infra/cache.py`) from
+the case's pinned samurai/engine version (the `samurai`/`engine` block in
+`case.yaml`), the case sources (`main.cpp`/`scenario.hpp`/`CMakeLists.txt` and
+the `run` config), the shared figure engine (`infra/galleria/`), and its
+`postprocess.py`. On a hit the media are restored from the store
+(`.cache/media/`, gitignored); on a miss the case is built and the store is
+repopulated. Site-only metadata (title, tags, `README.md`) and the unused
+profile never trigger a re-run.
+
+In CI the store is carried across runs with `actions/cache`, so a push only
+re-renders the cases whose inputs actually changed. Escape hatches:
+
+```bash
+GALLERY_NO_CACHE=1      bash infra/build_case.sh <case> ci   # ignore the cache
+GALLERY_CACHE_REFRESH=1 bash infra/build_case.sh <case> ci   # rebuild + repopulate
+GALLERY_CACHE_DIR=/path bash infra/build_case.sh <case> ci   # relocate the store
+```
+
 ## What CI checks
 
+On a pull request (`validate` + `build` workflows):
+
 1. `python infra/validate.py` - schema + required files for every case.
-2. Build + run the `ci` profile of changed cases.
-3. Render media and attach a preview to the PR.
+2. Build, run and render the `ci` profile of the **affected** cases only - those
+   whose files changed, or every case when a shared input changes (the figure
+   engine/scripts or `environment.yml`). The per-ref samurai builds and the
+   rendered-media store are restored read-only, so unaffected work is reused and
+   the check fails if an affected case breaks. A doc-only PR builds nothing.
+
+On a push to `main` (`deploy` workflow): the same build over all cases (cached),
+then the Astro site is built and deployed to GitHub Pages.
