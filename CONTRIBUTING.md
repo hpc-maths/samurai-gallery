@@ -117,6 +117,14 @@ GALLERY_CACHE_DIR=/path bash infra/build_case.sh <case> ci   # relocate the stor
 
 ## What CI checks
 
+On a pull request (`validate` + `build` workflows):
+
 1. `python infra/validate.py` - schema + required files for every case.
-2. Build + run the `ci` profile of changed cases (cached when unchanged).
-3. Render media and attach a preview to the PR.
+2. Build, run and render the `ci` profile of the **affected** cases only - those
+   whose files changed, or every case when a shared input changes (the figure
+   engine/scripts or `environment.yml`). The per-ref samurai builds and the
+   rendered-media store are restored read-only, so unaffected work is reused and
+   the check fails if an affected case breaks. A doc-only PR builds nothing.
+
+On a push to `main` (`deploy` workflow): the same build over all cases (cached),
+then the Astro site is built and deployed to GitHub Pages.
