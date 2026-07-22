@@ -1,4 +1,5 @@
 :root {
+  /* Dark theme (default). Light theme overrides the same tokens below. */
   --bg: #0b0f17;
   --bg-soft: #101622;
   --surface: #141c2b;
@@ -12,14 +13,43 @@
   --accent-2: #ff4d8d;
   --accent-3: #4cc9f0;
   --gradient: linear-gradient(120deg, #ff7a45 0%, #ff4d8d 55%, #b14bf0 100%);
+  --shadow: 0 18px 50px -20px rgba(0, 0, 0, 0.7);
+  --header-bg: rgba(11, 15, 23, 0.72);
+  --glow-1: rgba(177, 75, 240, 0.14);
+  --glow-2: rgba(255, 122, 69, 0.12);
+  /* Dark render backdrop for media tiles (the simulations render on dark);
+     kept dark in both themes so the frame matches the images. */
+  --media-bg: #05070c;
+
   --radius: 16px;
   --radius-sm: 10px;
-  --shadow: 0 18px 50px -20px rgba(0, 0, 0, 0.7);
   --maxw: 1180px;
   --font: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
     sans-serif;
   --mono: ui-monospace, "SF Mono", "JetBrains Mono", "Fira Code", Menlo,
     monospace;
+}
+
+/* Light theme tokens. Applied when the user (or their OS, via the head
+   script) selects light. */
+:root[data-theme="light"] {
+  --bg: #f6f8fb;
+  --bg-soft: #eef1f6;
+  --surface: #ffffff;
+  --surface-2: #f1f4f9;
+  --border: #d3dbe6;
+  --border-soft: #e5eaf1;
+  --text: #182233;
+  --text-muted: #556072;
+  --text-dim: #8b95a6;
+  --accent: #e15828;
+  --accent-2: #db2f74;
+  --accent-3: #1391c4;
+  --gradient: linear-gradient(120deg, #f2622f 0%, #e5327a 55%, #9d3fe0 100%);
+  --shadow: 0 18px 45px -22px rgba(30, 45, 75, 0.28);
+  --header-bg: rgba(246, 248, 251, 0.8);
+  --glow-1: rgba(157, 63, 224, 0.1);
+  --glow-2: rgba(242, 98, 47, 0.1);
 }
 
 * {
@@ -39,14 +69,10 @@ body {
   -webkit-font-smoothing: antialiased;
   background-image: radial-gradient(
       900px 500px at 80% -8%,
-      rgba(177, 75, 240, 0.14),
+      var(--glow-1),
       transparent 60%
     ),
-    radial-gradient(
-      800px 480px at 8% 0%,
-      rgba(255, 122, 69, 0.12),
-      transparent 55%
-    );
+    radial-gradient(800px 480px at 8% 0%, var(--glow-2), transparent 55%);
   background-repeat: no-repeat;
 }
 
@@ -67,7 +93,7 @@ a {
   top: 0;
   z-index: 50;
   backdrop-filter: blur(12px);
-  background: rgba(11, 15, 23, 0.72);
+  background: var(--header-bg);
   border-bottom: 1px solid var(--border-soft);
 }
 .site-header .inner {
@@ -97,6 +123,7 @@ a {
 }
 .nav-links {
   display: flex;
+  align-items: center;
   gap: 22px;
   color: var(--text-muted);
   font-size: 0.92rem;
@@ -104,6 +131,38 @@ a {
 }
 .nav-links a:hover {
   color: var(--text);
+}
+.theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+}
+.theme-toggle:hover {
+  color: var(--text);
+  border-color: var(--text-dim);
+}
+.theme-toggle svg {
+  width: 18px;
+  height: 18px;
+}
+/* Show the icon for the theme you'd switch TO (default = dark -> show sun). */
+.theme-toggle .to-dark {
+  display: none;
+}
+:root[data-theme="light"] .theme-toggle .to-light {
+  display: none;
+}
+:root[data-theme="light"] .theme-toggle .to-dark {
+  display: inline;
 }
 
 /* ---------- Hero ---------- */
@@ -251,7 +310,7 @@ a {
 .card .thumb {
   position: relative;
   aspect-ratio: 1 / 1;
-  background: #05070c;
+  background: var(--media-bg);
   overflow: hidden;
 }
 .card .thumb img {
@@ -395,7 +454,7 @@ a {
   border-radius: var(--radius);
   overflow: hidden;
   border: 1px solid var(--border);
-  background: #05070c;
+  background: var(--media-bg);
   box-shadow: var(--shadow);
   /* Uniform square frame across every case page (shock-tube reference size).
      Non-square renders are fitted inside with letterboxing. */
