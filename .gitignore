@@ -1,0 +1,17 @@
+# Build artefacts
+build/
+.output/
+
+# Generated media (rendered in CI, deployed to Pages, never committed)
+cases/**/thumbnail.png
+cases/**/preview.mp4
+cases/**/*.gif
+
+# Python
+__pycache__/
+*.pyc
+
+# Site (increment 2)
+site/node_modules/
+site/dist/
+site/.astro/

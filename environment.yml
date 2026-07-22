@@ -1,0 +1,27 @@
+name: samurai-gallery
+channels:
+  - conda-forge
+dependencies:
+  # Build toolchain
+  - cmake
+  - ninja
+  - cxx-compiler
+  - c-compiler
+  # samurai build/runtime dependencies (mirrors samurai/conda/environment.yml)
+  - xtensor>0.25
+  - highfive>=3.0
+  - zlib
+  - hdf5
+  - fmt
+  - pugixml
+  - cli11<2.5
+  # Post-processing / media generation
+  - python>=3.11
+  - h5py
+  - numpy
+  - matplotlib
+  - ffmpeg
+  # Tooling for the gallery generator and CI
+  - pyyaml
+  - jsonschema
+  - pytest

@@ -1,0 +1,137 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://hpc-math-samurai.github.io/samurai-gallery/case.schema.json",
+  "title": "samurai gallery case",
+  "description": "Metadata contract for a single gallery case. One case = one directory under cases/. This file is the single source of truth: the website and the media pipeline are generated from it.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["title", "summary", "methods", "equation", "dimension", "adaptation", "run"],
+  "properties": {
+    "title": {
+      "type": "string",
+      "description": "Human-readable case title shown on the card and case page.",
+      "minLength": 3
+    },
+    "summary": {
+      "type": "string",
+      "description": "One-sentence description shown on the gallery card.",
+      "minLength": 10,
+      "maxLength": 200
+    },
+    "authors": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Names (and optionally emails) of the case authors."
+    },
+    "methods": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "enum": ["finite-volume", "lattice-boltzmann", "finite-difference"]
+      },
+      "description": "Numerical method families exercised by this case. Drives the site filter."
+    },
+    "equation": {
+      "type": "string",
+      "description": "Slug identifying the governing equation, e.g. 'compressible-euler', 'linear-advection', 'navier-stokes-incompressible', 'reaction-diffusion'."
+    },
+    "dimension": {
+      "type": "integer",
+      "enum": [1, 2, 3],
+      "description": "Spatial dimension."
+    },
+    "adaptation": {
+      "type": "string",
+      "enum": ["multiresolution", "amr", "uniform", "none"],
+      "description": "Mesh adaptation strategy used."
+    },
+    "difficulty": {
+      "type": "string",
+      "enum": ["beginner", "intermediate", "advanced"],
+      "default": "intermediate"
+    },
+    "featured": {
+      "type": "boolean",
+      "default": false,
+      "description": "Highlight this case on the landing page hero."
+    },
+    "tags": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Free-form extra tags for search/filtering."
+    },
+    "requires": {
+      "type": "array",
+      "items": { "type": "string", "enum": ["petsc", "mpi", "openmp", "cgal"] },
+      "description": "Optional samurai build features this case needs. CI skips the case if a feature is unavailable."
+    },
+    "references": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["text", "url"],
+        "properties": {
+          "text": { "type": "string" },
+          "url": { "type": "string", "format": "uri" }
+        }
+      },
+      "description": "External references (papers, competitor test pages, docs)."
+    },
+    "media": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Media file names produced by postprocess.py (relative to the case dir). Generated in CI, never committed.",
+      "properties": {
+        "thumbnail": { "type": "string", "default": "thumbnail.png" },
+        "hero": { "type": "string", "default": "preview.mp4" }
+      }
+    },
+    "run": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["target", "output_prefix", "profiles"],
+      "description": "How to build and run the case.",
+      "properties": {
+        "target": {
+          "type": "string",
+          "description": "CMake target name defined in the case CMakeLists.txt."
+        },
+        "output_prefix": {
+          "type": "string",
+          "description": "Prefix of the .h5/.xdmf files the simulation writes, without the per-iteration suffix."
+        },
+        "profiles": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["ci"],
+          "description": "Run profiles. 'ci' is a fast run used to generate lightweight preview media; 'hero' is an optional high-resolution run.",
+          "properties": {
+            "ci": { "$ref": "#/$defs/profile" },
+            "hero": { "$ref": "#/$defs/profile" }
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "profile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["args", "nfiles"],
+      "properties": {
+        "args": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "CLI arguments passed to the simulation executable."
+        },
+        "nfiles": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Number of output frames the run produces (used by postprocess.py to build the animation)."
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,29 @@
+title: __TITLE__
+summary: One sentence describing what happens and what to look at (10-200 chars).
+authors:
+  - Your Name
+methods:
+  - finite-volume        # finite-volume | lattice-boltzmann | finite-difference
+equation: __EQUATION__   # e.g. compressible-euler, linear-advection, reaction-diffusion
+dimension: 2             # 1 | 2 | 3
+adaptation: multiresolution   # multiresolution | amr | uniform | none
+difficulty: intermediate      # beginner | intermediate | advanced
+featured: false
+tags: []
+# requires: [petsc]      # uncomment if the case needs an optional samurai feature
+references:
+  - text: Reference title
+    url: https://example.org
+media:
+  thumbnail: thumbnail.png
+  hero: preview.mp4
+run:
+  target: __TARGET__
+  output_prefix: __SLUG__
+  profiles:
+    ci:
+      args: []           # CLI args EXCEPT --path/--filename/--nfiles (driver adds those)
+      nfiles: 40
+    hero:
+      args: []
+      nfiles: 120

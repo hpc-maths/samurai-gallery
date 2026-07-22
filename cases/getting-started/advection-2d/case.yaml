@@ -1,0 +1,31 @@
+title: Linear advection of a disc
+summary: A disc is transported diagonally while the multiresolution mesh tracks its edges.
+authors:
+  - The samurai team
+methods:
+  - finite-volume
+equation: linear-advection
+dimension: 2
+adaptation: multiresolution
+difficulty: beginner
+featured: true
+tags:
+  - transport
+  - upwind
+  - mesh-adaptation
+references:
+  - text: "samurai documentation - advection tutorial"
+    url: "https://hpc-math-samurai.readthedocs.io"
+media:
+  thumbnail: thumbnail.png
+  hero: preview.mp4
+run:
+  target: gallery-advection-2d
+  output_prefix: advection_2d
+  profiles:
+    ci:
+      args: ["--Tf", "0.6", "--min-level", "4", "--max-level", "8"]
+      nfiles: 40
+    hero:
+      args: ["--Tf", "0.6", "--min-level", "4", "--max-level", "10"]
+      nfiles: 120
