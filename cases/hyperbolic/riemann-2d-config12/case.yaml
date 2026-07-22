@@ -1,0 +1,37 @@
+title: 2D Riemann problem (config 12)
+summary: "Four constant states interact through shocks and contacts (configuration 12)."
+authors:
+  - The samurai-euler team
+methods:
+  - finite-volume
+equation: compressible-euler
+dimension: 2
+adaptation: multiresolution
+difficulty: advanced
+featured: false
+tags:
+  - compressible
+  - hllc
+requires:
+  - mpi
+references:
+  - text: "samurai-euler (Euler solver engine)"
+    url: "https://github.com/hpc-maths/samurai-euler"
+media:
+  thumbnail: thumbnail.png
+  hero: preview.mp4
+env: samurai-euler-env
+engine:
+  source: ../samurai-euler
+  code_file: scenario.hpp
+run:
+  target: euler_2d
+  output_prefix: riemann2d_config12_hllc
+  output_subdir: results
+  profiles:
+    ci:
+      args: ["--test-case", "riemann2d_config12", "--scheme", "hllc", "--Tf", "0.25", "--min-level", "2", "--max-level", "8"]
+      nfiles: 40
+    hero:
+      args: ["--test-case", "riemann2d_config12", "--scheme", "hllc", "--Tf", "0.25", "--min-level", "2", "--max-level", "10"]
+      nfiles: 100

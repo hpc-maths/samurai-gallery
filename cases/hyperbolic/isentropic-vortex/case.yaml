@@ -1,0 +1,37 @@
+title: Isentropic vortex
+summary: "A smooth isentropic vortex advects across the domain; an exact-solution benchmark."
+authors:
+  - The samurai-euler team
+methods:
+  - finite-volume
+equation: compressible-euler
+dimension: 2
+adaptation: multiresolution
+difficulty: advanced
+featured: false
+tags:
+  - compressible
+  - hllc
+requires:
+  - mpi
+references:
+  - text: "samurai-euler (Euler solver engine)"
+    url: "https://github.com/hpc-maths/samurai-euler"
+media:
+  thumbnail: thumbnail.png
+  hero: preview.mp4
+env: samurai-euler-env
+engine:
+  source: ../samurai-euler
+  code_file: scenario.hpp
+run:
+  target: euler_2d
+  output_prefix: isentropic_vortex_hllc
+  output_subdir: results
+  profiles:
+    ci:
+      args: ["--test-case", "isentropic_vortex", "--scheme", "hllc", "--Tf", "1.0", "--min-level", "2", "--max-level", "8"]
+      nfiles: 40
+    hero:
+      args: ["--test-case", "isentropic_vortex", "--scheme", "hllc", "--Tf", "1.0", "--min-level", "2", "--max-level", "9"]
+      nfiles: 100

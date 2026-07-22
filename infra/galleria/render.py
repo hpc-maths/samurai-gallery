@@ -55,6 +55,7 @@ def render_series_2d(
     *,
     component=None,
     symmetric: bool = False,
+    thumb_frac: float = 0.5,
     thumbnail: str = "thumbnail.png",
     video: str = "preview.mp4",
     cmap: str = "magma",
@@ -66,6 +67,8 @@ def render_series_2d(
 
     ``symmetric`` clamps the color scale to [-M, M] (useful for signed fields
     such as a level set, so the zero level sits at the middle of the colormap).
+    ``thumb_frac`` selects which frame becomes the thumbnail (0 = first,
+    1 = last); use a late frame for cases whose structure develops over time.
     """
     files = list_frames(directory, prefix)
     vmin, vmax = _compute_range(files, field, component, symmetric)
@@ -90,7 +93,7 @@ def render_series_2d(
         bitrate=3200,
         extra_args=["-pix_fmt", "yuv420p", "-movflags", "+faststart"],
     )
-    thumb_index = len(files) // 2  # a representative mid-run frame
+    thumb_index = min(len(files) - 1, max(0, round((len(files) - 1) * thumb_frac)))
 
     with writer.saving(fig, video, dpi=dpi):
         for i, path in enumerate(files):
