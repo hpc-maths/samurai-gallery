@@ -24,10 +24,14 @@ def main(yaml_path: str, profile: str) -> None:
     prof = profiles[profile]
 
     args = " ".join(shlex.quote(str(a)) for a in prof.get("args", []))
+    engine = meta.get("engine") or {}
     print(f"TARGET={shlex.quote(run['target'])}")
     print(f"OUTPUT_PREFIX={shlex.quote(run['output_prefix'])}")
+    print(f"OUTPUT_SUBDIR={shlex.quote(run.get('output_subdir', ''))}")
     print(f"NFILES={shlex.quote(str(prof['nfiles']))}")
     print(f"ARGS={shlex.quote(args)}")
+    print(f"ENV={shlex.quote(meta.get('env', 'samurai-gallery'))}")
+    print(f"ENGINE_SOURCE={shlex.quote(engine.get('source', ''))}")
 
 
 if __name__ == "__main__":

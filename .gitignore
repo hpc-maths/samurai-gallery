@@ -16,3 +16,4 @@ site/node_modules/
 site/dist/
 site/.astro/
 site/public/media/
+cases/**/build-engine/

@@ -4,18 +4,30 @@ from __future__ import annotations
 
 import glob
 import os
+import re
 
 import h5py
 import numpy as np
 
 
-def list_frames(directory: str, prefix: str) -> list[str]:
-    """Return the sorted list of ``.h5`` frame files for a given prefix.
+def _frame_key(path: str):
+    """Natural-sort key: order by the last integer in the file name.
 
-    samurai writes one file per output step named ``<prefix>_<frame>.h5``.
+    Handles both zero-padded gallery output (``prefix_0007``) and samurai's
+    unpadded ``prefix_ite_7`` naming, and puts an ``_init`` snapshot first.
+    """
+    stem = os.path.basename(path)
+    nums = re.findall(r"\d+", stem)
+    return int(nums[-1]) if nums else -1
+
+
+def list_frames(directory: str, prefix: str) -> list[str]:
+    """Return the frame ``.h5`` files for a given prefix, in time order.
+
+    samurai writes one file per output step, e.g. ``<prefix>_<frame>.h5``.
     """
     pattern = os.path.join(directory, f"{prefix}_*.h5")
-    files = sorted(glob.glob(pattern))
+    files = sorted(glob.glob(pattern), key=_frame_key)
     if not files:
         raise FileNotFoundError(f"no frames matching {pattern!r}")
     return files

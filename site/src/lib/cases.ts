@@ -36,8 +36,12 @@ export interface GalleryCase {
   media: { thumbnail: string; hero: string };
   /** raw README.md contents (Markdown + LaTeX) */
   readme: string;
-  /** raw main.cpp contents */
+  /** raw source code shown on the case page (main.cpp, or the engine scenario) */
   code: string;
+  /** file name of the displayed code (e.g. main.cpp or scenario.hpp) */
+  codeFile: string;
+  /** name of the external engine powering this case, if any */
+  engine: string | null;
   /** site-relative media paths (populated by collect-media) */
   thumbnailUrl: string;
   heroUrl: string;
@@ -65,6 +69,10 @@ export function getCases(): GalleryCase[] {
       const thumbnail = media.thumbnail ?? "thumbnail.png";
       const hero = media.hero ?? "preview.mp4";
 
+      // Displayed code: a local main.cpp, or the engine scenario file.
+      const engine = meta.engine ?? null;
+      const codeFile = engine?.code_file ?? "main.cpp";
+
       cases.push({
         id: `${category}/${slug}`,
         category,
@@ -83,7 +91,9 @@ export function getCases(): GalleryCase[] {
         references: meta.references ?? [],
         media: { thumbnail, hero },
         readme: readIfExists(path.join(dir, "README.md")),
-        code: readIfExists(path.join(dir, "main.cpp")),
+        code: readIfExists(path.join(dir, codeFile)),
+        codeFile,
+        engine: engine?.source ? engine.source.replace(/^\.\.\//, "") : engine ? "engine" : null,
         thumbnailUrl: `media/${category}/${slug}/${thumbnail}`,
         heroUrl: `media/${category}/${slug}/${hero}`,
       });

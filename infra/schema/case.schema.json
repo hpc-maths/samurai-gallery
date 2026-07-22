@@ -66,6 +66,26 @@
       "items": { "type": "string", "enum": ["petsc", "mpi", "openmp", "cgal"] },
       "description": "Optional samurai build features this case needs. CI skips the case if a feature is unavailable."
     },
+    "env": {
+      "type": "string",
+      "description": "conda/micromamba environment used to build and run this case (default: samurai-gallery). Media post-processing always runs in samurai-gallery."
+    },
+    "engine": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "For cases powered by an external solver (e.g. samurai-euler) instead of a local main.cpp. When present, main.cpp is not required; the case builds the target from an external CMake project and displays 'code_file' on the site.",
+      "required": ["source", "code_file"],
+      "properties": {
+        "source": {
+          "type": "string",
+          "description": "Path to the external CMake project, relative to the gallery root (e.g. ../samurai-euler). Overridable in CI via $GALLERY_ENGINE_<NAME>."
+        },
+        "code_file": {
+          "type": "string",
+          "description": "Path (relative to the case dir) of the source file shown on the site as this case's code. Typically a copy of the scenario header."
+        }
+      }
+    },
     "references": {
       "type": "array",
       "items": {
@@ -96,11 +116,15 @@
       "properties": {
         "target": {
           "type": "string",
-          "description": "CMake target name defined in the case CMakeLists.txt."
+          "description": "CMake target name (defined in the case CMakeLists.txt, or in the engine project for engine-based cases)."
         },
         "output_prefix": {
           "type": "string",
           "description": "Prefix of the .h5/.xdmf files the simulation writes, without the per-iteration suffix."
+        },
+        "output_subdir": {
+          "type": "string",
+          "description": "Subdirectory (relative to the run directory) the executable writes its output into. Default: none. samurai-euler writes into 'results'."
         },
         "profiles": {
           "type": "object",

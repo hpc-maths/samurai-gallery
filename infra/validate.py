@@ -20,6 +20,9 @@ CASES_DIR = ROOT / "cases"
 
 # Files every case directory must contain besides case.yaml.
 REQUIRED_FILES = ["main.cpp", "CMakeLists.txt", "README.md", "postprocess.py"]
+# Engine-based cases build from an external project, so they replace
+# main.cpp/CMakeLists.txt with the engine + a displayed code_file.
+ENGINE_REQUIRED_FILES = ["README.md", "postprocess.py"]
 
 
 def validate_case(case_yaml: Path, validator: Draft7Validator) -> list[str]:
@@ -35,9 +38,15 @@ def validate_case(case_yaml: Path, validator: Draft7Validator) -> list[str]:
         loc = "/".join(str(p) for p in err.path) or "(root)"
         errors.append(f"{rel}: schema: {loc}: {err.message}")
 
-    for fname in REQUIRED_FILES:
+    engine = meta.get("engine") if isinstance(meta, dict) else None
+    required = ENGINE_REQUIRED_FILES if engine else REQUIRED_FILES
+    for fname in required:
         if not (case_yaml.parent / fname).exists():
             errors.append(f"{rel}: missing required file '{fname}'")
+
+    if engine and isinstance(engine, dict) and "code_file" in engine:
+        if not (case_yaml.parent / engine["code_file"]).exists():
+            errors.append(f"{rel}: engine.code_file '{engine['code_file']}' not found")
 
     return errors
 
