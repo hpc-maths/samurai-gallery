@@ -22,6 +22,15 @@ const href = (p: string) => `${base.replace(/\/$/, "")}/${p.replace(/^\//, "")}`
 
 const readmeHtml = renderMarkdown(item.readme);
 const methodLabels = item.methods.map((m) => METHOD_LABELS[m] ?? m).join(", ");
+
+// The samurai version (or engine + version) this case was validated against.
+const testedWith = item.engine
+  ? item.engineRef
+    ? `${item.engine} ${item.engineRef}`
+    : item.engine
+  : item.samuraiRef
+    ? `samurai ${item.samuraiRef}`
+    : null;
 ---
 
 <Base title={`${item.title} · samurai gallery`} description={item.summary}>
@@ -71,6 +80,9 @@ const methodLabels = item.methods.map((m) => METHOD_LABELS[m] ?? m).join(", ");
         <div class="row"><span class="k">Dimension</span><span class="v">{item.dimension}D</span></div>
         <div class="row"><span class="k">Mesh</span><span class="v">{ADAPTATION_LABELS[item.adaptation] ?? item.adaptation}</span></div>
         <div class="row"><span class="k">Difficulty</span><span class="v">{item.difficulty}</span></div>
+        {testedWith && (
+          <div class="row"><span class="k">Tested with</span><span class="v">{testedWith}</span></div>
+        )}
         {item.authors.length > 0 && (
           <div class="row"><span class="k">Authors</span><span class="v">{item.authors.join(", ")}</span></div>
         )}

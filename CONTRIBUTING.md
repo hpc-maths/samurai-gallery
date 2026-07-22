@@ -9,7 +9,8 @@ case automatically, and posts the generated media on the pull request.
 ```bash
 # 1. Scaffold from the template
 python scripts/new-case.py --category hyperbolic --slug kelvin-helmholtz \
-    --title "Kelvin-Helmholtz instability" --equation compressible-euler
+    --title "Kelvin-Helmholtz instability" --equation compressible-euler \
+    --samurai-ref v0.33.0
 
 # 2. Fill in the generated files (see "Anatomy" below)
 
@@ -44,6 +45,37 @@ rendered in CI and deployed with the site.
   - `args` lists CLI arguments **except** `--path`, `--filename` and
     `--nfiles`, which the build driver supplies.
 
+## Pinning the samurai version
+
+Every case records the samurai version it is tested against, so CI builds and
+links the case against **that exact version** (and the site shows it as
+"Tested with samurai `<ref>`"). Cases sharing a ref reuse a single build.
+
+```yaml
+samurai:
+  repo: hpc-maths/samurai   # optional, default hpc-maths/samurai
+  ref: v0.33.0              # required: tag, commit or branch
+```
+
+Bump `ref` when you validate a case against a newer samurai; different cases may
+pin different versions.
+
+## Engine cases (external solver)
+
+A case powered by an external solver (e.g. `samurai-euler`) has no `main.cpp`.
+Instead of the `samurai` block it declares a self-describing `engine` block -
+the git repository, the tested ref, the build/run environment and the source
+file to display. CI clones the repo at that ref, creates the environment from
+its `conda/environment.yml` if missing, and builds `run.target`:
+
+```yaml
+engine:
+  repo: hpc-maths/samurai-euler   # git repository
+  ref: gallery-scenarios          # tested ref
+  env: samurai-euler-env          # conda env (provides samurai for this case)
+  code_file: scenario.hpp         # source shown on the site
+```
+
 ## Conventions for `main.cpp`
 
 - Use samurai's native CLI options (`--min-level`, `--max-level`, `--mr-eps`,
@@ -56,7 +88,11 @@ rendered in CI and deployed with the site.
 ## Local requirements
 
 Everything runs inside the dedicated `samurai-gallery` environment
-(`environment.yml`) with samurai installed into it. See the README quick start.
+(`environment.yml`), which provides the build toolchain and samurai's
+dependencies. `infra/build_case.sh` builds the samurai version pinned by the
+case into a per-ref cache under `~/.cache/samurai-gallery` and links the case
+against it - you do not install samurai into the environment yourself. See the
+README quick start.
 
 ## What CI checks
 

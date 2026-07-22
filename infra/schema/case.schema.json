@@ -66,19 +66,43 @@
       "items": { "type": "string", "enum": ["petsc", "mpi", "openmp", "cgal"] },
       "description": "Optional samurai build features this case needs. CI skips the case if a feature is unavailable."
     },
+    "samurai": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "The samurai version this case is tested against. Required for local (main.cpp) cases; engine cases pin their samurai through the engine environment instead. CI builds this exact ref and links the case against it.",
+      "required": ["ref"],
+      "properties": {
+        "repo": {
+          "type": "string",
+          "description": "samurai git repository, as 'owner/name' or a full clone URL (default: hpc-maths/samurai)."
+        },
+        "ref": {
+          "type": "string",
+          "description": "samurai git ref (tag, commit or branch) this case is tested against, e.g. 'v0.33.0'."
+        }
+      }
+    },
     "env": {
       "type": "string",
-      "description": "conda/micromamba environment used to build and run this case (default: samurai-gallery). Media post-processing always runs in samurai-gallery."
+      "description": "conda/micromamba environment used to build and run this case (default: samurai-gallery). Media post-processing always runs in samurai-gallery. Engine cases use 'engine.env' instead."
     },
     "engine": {
       "type": "object",
       "additionalProperties": false,
-      "description": "For cases powered by an external solver (e.g. samurai-euler) instead of a local main.cpp. When present, main.cpp is not required; the case builds the target from an external CMake project and displays 'code_file' on the site.",
-      "required": ["source", "code_file"],
+      "description": "For cases powered by an external solver (e.g. samurai-euler) instead of a local main.cpp. When present, main.cpp is not required; the case clones this git repository, builds 'run.target' from its CMake project in 'env', and displays 'code_file' on the site.",
+      "required": ["repo", "ref", "env", "code_file"],
       "properties": {
-        "source": {
+        "repo": {
           "type": "string",
-          "description": "Path to the external CMake project, relative to the gallery root (e.g. ../samurai-euler). Overridable in CI via $GALLERY_ENGINE_<NAME>."
+          "description": "Engine git repository, as 'owner/name' or a full clone URL (e.g. hpc-maths/samurai-euler)."
+        },
+        "ref": {
+          "type": "string",
+          "description": "Engine git ref (tag, commit or branch) this case is tested against, e.g. 'gallery-scenarios'."
+        },
+        "env": {
+          "type": "string",
+          "description": "conda/micromamba environment used to build and run the engine target. Created from the engine repo's conda/environment.yml if missing. This environment provides samurai for the case."
         },
         "code_file": {
           "type": "string",

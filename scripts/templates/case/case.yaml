@@ -17,6 +17,9 @@ references:
 media:
   thumbnail: thumbnail.png
   hero: preview.mp4
+samurai:                   # samurai version this case is tested against
+  repo: hpc-maths/samurai  # optional (default hpc-maths/samurai)
+  ref: __SAMURAI_REF__     # tag, commit or branch, e.g. v0.33.0
 run:
   target: __TARGET__
   output_prefix: __SLUG__

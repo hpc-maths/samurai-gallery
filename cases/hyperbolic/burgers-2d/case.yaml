@@ -19,6 +19,9 @@ references:
 media:
   thumbnail: thumbnail.png
   hero: preview.mp4
+samurai:
+  repo: hpc-maths/samurai
+  ref: v0.33.0
 run:
   target: gallery-burgers-2d
   output_prefix: burgers_2d

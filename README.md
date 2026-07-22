@@ -23,20 +23,18 @@ environment.yml            the dedicated conda/micromamba environment
 ## Quick start
 
 ```bash
-# 1. Create the dedicated environment (installs the toolchain + samurai deps)
+# 1. Create the dedicated environment (toolchain + samurai deps + media stack)
 micromamba create -f environment.yml
 micromamba activate samurai-gallery
 
-# 2. Install samurai into the environment so find_package(samurai) works
-cmake -S /path/to/samurai -B /tmp/samurai-build \
-    -DCMAKE_INSTALL_PREFIX="$CONDA_PREFIX" -DCMAKE_BUILD_TYPE=Release
-cmake --install /tmp/samurai-build
-
-# 3. Build, run and render any case end to end
+# 2. Build, run and render any case end to end
 bash infra/build_case.sh cases/getting-started/advection-2d ci
 ```
 
-This produces `thumbnail.png` and `preview.mp4` in the case directory.
+This produces `thumbnail.png` and `preview.mp4` in the case directory. The
+driver builds the samurai version pinned by the case (`samurai.ref` in its
+`case.yaml`) into a per-ref cache under `~/.cache/samurai-gallery` and links the
+case against it - no manual samurai install needed.
 
 ## Adding a case
 
@@ -67,12 +65,13 @@ Two GitHub Actions workflows (`.github/workflows/`):
   Per-case failures are non-fatal - the site always deploys, with a placeholder
   for any case whose media is missing.
 
-The deploy workflow builds samurai from source into the `samurai-gallery`
-environment and, for the compressible-Euler cases, sets up the
-[`samurai-euler`](https://github.com/hpc-maths/samurai-euler) engine env. Pin
-the upstream refs via the `SAMURAI_REF` / `SAMURAI_EULER_REF` env vars at the
-top of `deploy.yml`.
+Each case pins the samurai version it is tested against in its `case.yaml`
+(`samurai.ref` for finite-volume cases, `engine.repo`+`engine.ref` for
+compressible-Euler cases). The deploy workflow builds each pinned version on
+demand via `infra/build_case.sh` and caches the per-ref installs and engine
+checkouts under `~/.cache/samurai-gallery` (persisted across runs by
+`actions/cache`). To bump a case, change its ref in `case.yaml`.
 
 **One-time setup:** in the repository settings, set **Pages → Source** to
-**GitHub Actions**. The Euler cases (Kelvin-Helmholtz, Sedov, Riemann, ...) need
-their scenarios present on the `SAMURAI_EULER_REF` branch of samurai-euler.
+**GitHub Actions**. Each Euler case's scenario must be present on the
+`engine.ref` it declares in its `case.yaml`.
