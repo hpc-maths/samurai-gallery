@@ -4,59 +4,63 @@ import CaseCard from "../components/CaseCard.astro";
 import { getCases, METHOD_LABELS, ADAPTATION_LABELS } from "../lib/cases";
 
 const cases = getCases();
-
-// Build filter groups only from values actually present in the gallery.
 const methods = [...new Set(cases.flatMap((c) => c.methods))].sort();
 const dimensions = [...new Set(cases.map((c) => c.dimension))].sort();
 const adaptations = [...new Set(cases.map((c) => c.adaptation))].sort();
 ---
 
 <Base title="samurai gallery">
-  <section class="hero">
+  <section class="masthead">
     <div class="container">
-      <span class="eyebrow">◆ adaptive mesh refinement · multiresolution</span>
-      <h1>Simulations that <span class="grad">refine themselves</span>.</h1>
-      <p class="lead">
-        A community gallery of simulation cases built with <strong>samurai</strong>:
-        finite-volume schemes on adaptive meshes that put the resolution exactly
-        where the physics happens. Explore the code, watch it run, and build your own.
+      <div class="label kicker">Adaptive mesh refinement · multiresolution</div>
+      <h1>Finite-volume simulations that refine themselves.</h1>
+      <p>
+        A community catalogue of simulation cases built with samurai. Each entry
+        is reproducible from a single folder: the code, the equations, and the
+        run that produced the image.
       </p>
-      <div class="cta">
-        <a class="btn btn-primary" href="#cases">Explore the cases ↓</a>
-        <a class="btn btn-ghost" href="https://github.com/hpc-maths/samurai" target="_blank" rel="noopener">Get samurai</a>
+      <div class="actions">
+        <a href="https://github.com/hpc-maths/samurai" target="_blank" rel="noopener">Get samurai ↗</a>
+        <a href="https://hpc-math-samurai.readthedocs.io" target="_blank" rel="noopener">Documentation ↗</a>
       </div>
     </div>
   </section>
 
-  <section id="cases" class="container">
-    <div class="filters" id="filters">
-      <span class="group-label">Method</span>
-      {methods.map((m) => (
-        <button class="chip" data-group="methods" data-value={m} aria-pressed="false">{METHOD_LABELS[m] ?? m}</button>
-      ))}
-      <span class="filter-sep"></span>
-      <span class="group-label">Dim</span>
-      {dimensions.map((d) => (
-        <button class="chip" data-group="dimension" data-value={`d${d}`} aria-pressed="false">{d}D</button>
-      ))}
-      <span class="filter-sep"></span>
-      <span class="group-label">Mesh</span>
-      {adaptations.map((a) => (
-        <button class="chip" data-group="adaptation" data-value={a} aria-pressed="false">{ADAPTATION_LABELS[a] ?? a}</button>
-      ))}
+  <div class="container">
+    <div class="catalog-bar" id="filters">
+      <span class="count" id="count">{cases.length} cases</span>
+      <div class="filter-group">
+        <span class="group-label">Method</span>
+        {methods.map((m) => (
+          <button class="chip" data-group="methods" data-value={m} aria-pressed="false">{METHOD_LABELS[m] ?? m}</button>
+        ))}
+      </div>
+      <div class="filter-group">
+        <span class="group-label">Dim</span>
+        {dimensions.map((d) => (
+          <button class="chip" data-group="dimension" data-value={`d${d}`} aria-pressed="false">{d}D</button>
+        ))}
+      </div>
+      <div class="filter-group">
+        <span class="group-label">Mesh</span>
+        {adaptations.map((a) => (
+          <button class="chip" data-group="adaptation" data-value={a} aria-pressed="false">{ADAPTATION_LABELS[a] ?? a}</button>
+        ))}
+      </div>
     </div>
 
     <div class="grid" id="grid">
-      {cases.map((item) => <CaseCard item={item} />)}
+      {cases.map((item, i) => <CaseCard item={item} index={i + 1} />)}
       <p class="empty" id="empty" hidden>No case matches these filters.</p>
     </div>
-  </section>
+  </div>
 
   <script>
-    // Client-side filtering: OR within a group, AND across groups.
     const filters = document.getElementById("filters")!;
     const cards = [...document.querySelectorAll<HTMLElement>("#grid .card")];
     const empty = document.getElementById("empty")!;
+    const count = document.getElementById("count")!;
+    const total = cards.length;
 
     const active: Record<string, Set<string>> = {
       methods: new Set(),
@@ -77,6 +81,7 @@ const adaptations = [...new Set(cases.map((c) => c.adaptation))].sort();
         if (ok) visible++;
       }
       empty.hidden = visible !== 0;
+      count.textContent = visible === total ? `${total} cases` : `${visible} / ${total} cases`;
     }
 
     filters.addEventListener("click", (e) => {

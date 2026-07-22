@@ -4,12 +4,14 @@ import { METHOD_LABELS } from "../lib/cases";
 
 interface Props {
   item: GalleryCase;
+  index: number;
 }
-const { item } = Astro.props;
+const { item, index } = Astro.props;
 const base = import.meta.env.BASE_URL;
 const href = (p: string) => `${base.replace(/\/$/, "")}/${p.replace(/^\//, "")}`;
 
-// data-* attributes drive the client-side filtering on the index page.
+const num = String(index).padStart(2, "0");
+const methodLabel = METHOD_LABELS[item.methods[0]] ?? item.methods[0] ?? "";
 const dims = `d${item.dimension}`;
 ---
 
@@ -22,7 +24,7 @@ const dims = `d${item.dimension}`;
   data-equation={item.equation}
 >
   <div class="thumb">
-    <div class="placeholder">preview rendering…</div>
+    <div class="placeholder">rendering</div>
     <img
       class="theme-media"
       data-dark={href(item.thumbnailDarkUrl)}
@@ -31,13 +33,11 @@ const dims = `d${item.dimension}`;
       loading="lazy"
       onerror="this.style.display='none'"
     />
-    <span class="badge">{item.dimension}D</span>
   </div>
-  <div class="body">
-    <div class="tags">
-      {item.methods.map((m) => <span class="tag method">{METHOD_LABELS[m] ?? m}</span>)}
-    </div>
-    <h3>{item.title}</h3>
-    <p>{item.summary}</p>
+  <div class="meta-row">
+    <span>Fig. {num}</span>
+    <span>{methodLabel} · {item.dimension}D</span>
   </div>
+  <h3>{item.title}</h3>
+  <p>{item.summary}</p>
 </a>
