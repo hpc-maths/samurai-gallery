@@ -55,8 +55,6 @@ const methodLabels = item.methods.map((m) => METHOD_LABELS[m] ?? m).join(", ");
       <div class="media-frame">
         <video
           class="theme-media"
-          src={href(item.heroDarkUrl)}
-          poster={href(item.thumbnailDarkUrl)}
           data-dark={href(item.heroDarkUrl)}
           data-light={href(item.heroLightUrl)}
           data-poster-dark={href(item.thumbnailDarkUrl)}
