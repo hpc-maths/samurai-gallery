@@ -71,7 +71,7 @@ its `conda/environment.yml` if missing, and builds `run.target`:
 ```yaml
 engine:
   repo: hpc-maths/samurai-euler   # git repository
-  ref: gallery-scenarios          # tested ref
+  ref: main                       # tested ref
   env: samurai-euler-env          # conda env (provides samurai for this case)
   code_file: scenario.hpp         # source shown on the site
 ```

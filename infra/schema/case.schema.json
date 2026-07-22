@@ -98,7 +98,7 @@
         },
         "ref": {
           "type": "string",
-          "description": "Engine git ref (tag, commit or branch) this case is tested against, e.g. 'gallery-scenarios'."
+          "description": "Engine git ref (tag, commit or branch) this case is tested against, e.g. 'main'."
         },
         "env": {
           "type": "string",

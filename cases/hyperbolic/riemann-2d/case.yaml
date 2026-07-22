@@ -26,7 +26,7 @@ media:
   hero: preview.mp4
 engine:
   repo: hpc-maths/samurai-euler
-  ref: gallery-scenarios
+  ref: main
   env: samurai-euler-env
   code_file: scenario.hpp
 run:
