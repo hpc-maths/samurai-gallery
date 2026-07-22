@@ -53,6 +53,19 @@ jobs:
           restore-keys: |
             samurai-gallery-
 
+      # Rendered media, content-addressed per case by infra/cache.py: build_case.sh
+      # skips compile+run+render and restores the media whenever a case's inputs
+      # (its pinned samurai/engine ref, sources, and the figure engine/scripts)
+      # are unchanged. Saved under a run-unique key and restored via the prefix;
+      # obsolete entries age out under GitHub's LRU cache eviction.
+      - name: Cache rendered media (per case)
+        uses: actions/cache@v4
+        with:
+          path: .cache/media
+          key: gallery-media-${{ github.sha }}
+          restore-keys: |
+            gallery-media-
+
       - name: Build, run and render every case
         shell: bash -el {0}
         run: |

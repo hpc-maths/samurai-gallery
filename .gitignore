@@ -2,6 +2,9 @@
 build/
 .output/
 
+# Content-addressed cache of rendered media (see infra/cache.py)
+.cache/
+
 # Generated media (rendered in CI, deployed to Pages, never committed)
 cases/**/thumbnail*.png
 cases/**/preview*.mp4
