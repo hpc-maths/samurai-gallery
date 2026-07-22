@@ -1,0 +1,118 @@
+name: deploy
+
+# Build every case's media (compile -> run -> render), build the Astro site,
+# and deploy it to GitHub Pages. Per-case build failures are non-fatal: the
+# site always deploys, showing a placeholder for any case whose media is
+# missing (collect-media tolerates gaps).
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# Pin the upstream dependencies here for reproducible builds.
+env:
+  SAMURAI_REPO: hpc-maths/samurai
+  SAMURAI_REF: "" # empty = default branch; set a tag/commit to pin
+  SAMURAI_EULER_REPO: hpc-maths/samurai-euler
+  # The Euler engine cases (Kelvin-Helmholtz, Sedov, ...) live on this ref.
+  SAMURAI_EULER_REF: gallery-scenarios
+  BASE_PATH: /samurai-gallery
+  SITE_URL: https://hpc-maths.github.io
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Checkout gallery
+        uses: actions/checkout@v4
+
+      - name: Clone samurai (source, for the finite-volume cases)
+        run: |
+          git clone --filter=blob:none "https://github.com/${SAMURAI_REPO}.git" "${GITHUB_WORKSPACE}/../samurai-src"
+          if [ -n "${SAMURAI_REF}" ]; then
+            git -C "${GITHUB_WORKSPACE}/../samurai-src" checkout "${SAMURAI_REF}"
+          fi
+
+      - name: Clone samurai-euler (engine, for the compressible-Euler cases)
+        continue-on-error: true
+        run: |
+          git clone --filter=blob:none "https://github.com/${SAMURAI_EULER_REPO}.git" "${GITHUB_WORKSPACE}/../samurai-euler"
+          git -C "${GITHUB_WORKSPACE}/../samurai-euler" checkout "${SAMURAI_EULER_REF}" \
+            || echo "ref ${SAMURAI_EULER_REF} not found; using default branch (Euler cases may be skipped)"
+
+      - name: Set up micromamba (samurai-gallery env)
+        uses: mamba-org/setup-micromamba@v2
+        with:
+          environment-file: environment.yml
+          cache-environment: true
+
+      - name: Build and install samurai into the gallery env
+        continue-on-error: true
+        shell: bash -el {0}
+        run: |
+          PREFIX="${MAMBA_ROOT_PREFIX}/envs/samurai-gallery"
+          micromamba run -n samurai-gallery cmake -S "${GITHUB_WORKSPACE}/../samurai-src" -B /tmp/samurai-build \
+            -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX="${PREFIX}" \
+            -DBUILD_DEMOS=OFF -DBUILD_TESTS=OFF
+          micromamba run -n samurai-gallery cmake --install /tmp/samurai-build
+
+      - name: Create the Euler engine env (samurai-euler-env)
+        continue-on-error: true
+        run: |
+          EULER_ENV_FILE="${GITHUB_WORKSPACE}/../samurai-euler/conda/environment.yml"
+          if [ -f "${EULER_ENV_FILE}" ]; then
+            micromamba create -y -n samurai-euler-env -f "${EULER_ENV_FILE}"
+          else
+            echo "no samurai-euler env file; Euler cases will be skipped"
+          fi
+
+      - name: Build, run and render every case
+        shell: bash -el {0}
+        run: |
+          fail=""
+          for d in cases/*/*/; do
+            [ -f "${d}case.yaml" ] || continue
+            echo "::group::${d}"
+            if bash infra/build_case.sh "${d}" ci; then
+              echo "OK ${d}"
+            else
+              echo "::warning::media generation failed for ${d}"
+              fail="${fail} ${d}"
+            fi
+            echo "::endgroup::"
+          done
+          [ -z "${fail}" ] && echo "all cases rendered" || echo "cases without media:${fail}"
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: site/package-lock.json
+
+      - name: Build the site
+        working-directory: site
+        run: |
+          npm ci
+          npm run build
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: site/dist
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
