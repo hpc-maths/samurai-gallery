@@ -1,18 +1,19 @@
 name: deploy
 
-# Build every case's media (compile -> run -> render), build the Astro site,
-# and deploy it to GitHub Pages. Per-case build failures are non-fatal: the
-# site always deploys, showing a placeholder for any case whose media is
-# missing (collect-media tolerates gaps).
+# Build every case's media in parallel (one job per case), then assemble and
+# deploy the Astro site to GitHub Pages. Per-case failures are non-fatal: the
+# site always deploys, showing a placeholder for any case whose media is missing
+# (collect-media tolerates gaps), and failures are surfaced in the job summary.
+#
+# Each case is content-addressed (infra/cache.py), so a case whose inputs (its
+# pinned samurai/engine ref, sources, and the figure engine/scripts) are
+# unchanged is a cache hit and is not rebuilt. Successive deploys therefore only
+# rebuild the cases that actually changed.
 on:
   push:
     branches: [main]
   workflow_dispatch:
 
-# samurai and engine versions are pinned per case in each case.yaml
-# (samurai.ref / engine.repo+ref). infra/build_case.sh builds each ref on
-# demand and caches it under ~/.cache/samurai-gallery, so cases can be tested
-# against different samurai versions.
 env:
   BASE_PATH: /samurai-gallery
   SITE_URL: https://hpc-maths.github.io
@@ -27,14 +28,30 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  build-and-deploy:
+  # Enumerate every case as a matrix input.
+  list:
     runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+    outputs:
+      cases: ${{ steps.list.outputs.cases }}
     steps:
-      - name: Checkout gallery
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+      - id: list
+        run: |
+          cases=$(for d in cases/*/*/; do [ -f "${d}case.yaml" ] && printf '%s\n' "${d%/}"; done)
+          echo "Cases:"; echo "$cases"
+          json=$(printf '%s\n' "$cases" | jq -R . | jq -cs .)
+          echo "cases=$json" >> "$GITHUB_OUTPUT"
+
+  # One parallel job per case: build, run and render, reusing the caches.
+  build:
+    needs: list
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        case: ${{ fromJSON(needs.list.outputs.cases) }}
+    steps:
+      - uses: actions/checkout@v4
 
       - name: Set up micromamba (samurai-gallery env)
         uses: mamba-org/setup-micromamba@v2
@@ -42,9 +59,8 @@ jobs:
           environment-file: environment.yml
           cache-environment: true
 
-      # Per-ref samurai installs and engine checkouts. The key includes a hash
-      # of every case.yaml, so bumping any samurai.ref / engine.ref rebuilds
-      # only what changed on the next run.
+      # Per-ref samurai installs and engine checkouts (keyed by all case.yaml, so
+      # bumping any ref rebuilds only what changed on the next run).
       - name: Cache samurai builds (per ref)
         uses: actions/cache@v4
         with:
@@ -53,49 +69,85 @@ jobs:
           restore-keys: |
             samurai-gallery-
 
-      # Rendered media, content-addressed per case by infra/cache.py: build_case.sh
-      # skips compile+run+render and restores the media whenever a case's inputs
-      # (its pinned samurai/engine ref, sources, and the figure engine/scripts)
-      # are unchanged. Saved under a run-unique key and restored via the prefix;
-      # obsolete entries age out under GitHub's LRU cache eviction.
-      - name: Cache rendered media (per case)
+      # The engine (samurai-euler) conda env, so engine cases do not recreate it
+      # from scratch every run (micromamba create is slow).
+      - name: Cache engine env (samurai-euler-env)
         uses: actions/cache@v4
         with:
-          path: .cache/media
-          key: gallery-media-${{ github.sha }}
+          path: ~/micromamba/envs/samurai-euler-env
+          key: samurai-euler-env-${{ hashFiles('cases/*/*/case.yaml') }}
           restore-keys: |
-            gallery-media-
+            samurai-euler-env-
 
-      - name: Build, run and render every case
+      - id: key
+        name: Compute media cache key
+        shell: bash -el {0}
+        run: echo "value=$(micromamba run -n samurai-gallery python infra/cache.py key '${{ matrix.case }}' ci)" >> "$GITHUB_OUTPUT"
+
+      # Content-addressed rendered media for this case: an exact key hit lets
+      # build_case.sh restore the media and skip compile+run+render entirely.
+      - name: Cache rendered media (this case)
+        uses: actions/cache@v4
+        with:
+          path: .cache/media/${{ steps.key.outputs.value }}
+          key: gallery-media-${{ steps.key.outputs.value }}
+
+      - name: Build, run and render ${{ matrix.case }}
         shell: bash -el {0}
         run: |
-          fail=""
-          total=0
-          for d in cases/*/*/; do
-            [ -f "${d}case.yaml" ] || continue
-            total=$((total + 1))
-            echo "::group::${d}"
-            if bash infra/build_case.sh "${d}" ci; then
-              echo "OK ${d}"
-            else
-              echo "::warning::media generation failed for ${d}"
-              fail="${fail} ${d}"
-            fi
-            echo "::endgroup::"
-          done
-          # Non-fatal: the site still deploys with placeholders for any gap, but a
-          # broken build must not pass unnoticed - surface it in the job summary.
-          if [ -n "${fail}" ]; then
-            nfail=$(echo ${fail} | wc -w)
-            {
-              echo "## :warning: ${nfail}/${total} case(s) failed to build or render";
-              echo;
-              for d in ${fail}; do echo "- \`${d}\`"; done
-            } >> "$GITHUB_STEP_SUMMARY"
-            echo "::warning::${nfail}/${total} cases without media:${fail}"
+          # Non-fatal: a broken case must not block the whole deploy (the site
+          # still ships a placeholder), but it must be visible in the summary.
+          if bash infra/build_case.sh "${{ matrix.case }}" ci; then
+            echo "- :white_check_mark: \`${{ matrix.case }}\`" >> "$GITHUB_STEP_SUMMARY"
           else
-            echo "### :white_check_mark: All ${total} cases rendered" >> "$GITHUB_STEP_SUMMARY"
+            echo "::warning::media generation failed for ${{ matrix.case }}"
+            echo "- :warning: \`${{ matrix.case }}\` failed to build/render" >> "$GITHUB_STEP_SUMMARY"
           fi
+
+      - id: slug
+        run: echo "enc=$(echo '${{ matrix.case }}' | tr / _)" >> "$GITHUB_OUTPUT"
+
+      # Stage under the case's real path so downloading with merge-multiple
+      # reconstructs cases/<cat>/<slug>/ directly in the deploy job.
+      - name: Stage media
+        run: |
+          mkdir -p "artifact/${{ matrix.case }}"
+          cp "${{ matrix.case }}"/thumbnail-dark.png \
+             "${{ matrix.case }}"/thumbnail-light.png \
+             "${{ matrix.case }}"/preview-dark.mp4 \
+             "${{ matrix.case }}"/preview-light.mp4 \
+             "artifact/${{ matrix.case }}/" 2>/dev/null || true
+
+      - name: Upload media
+        uses: actions/upload-artifact@v4
+        with:
+          name: media-${{ steps.slug.outputs.enc }}
+          path: artifact
+          if-no-files-found: warn
+          retention-days: 1
+
+  # Gather every case's media, build the site and deploy it.
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download rendered media
+        uses: actions/download-artifact@v4
+        with:
+          path: media-dl
+          pattern: media-*
+          merge-multiple: true
+
+      - name: Place media into case dirs
+        run: |
+          if [ -d media-dl/cases ]; then cp -R media-dl/cases/. cases/; fi
+          n=$(find cases -maxdepth 3 -name 'thumbnail-dark.png' | wc -l | tr -d ' ')
+          echo "### :framed_picture: media present for ${n} case(s)" >> "$GITHUB_STEP_SUMMARY"
 
       - name: Set up Node
         uses: actions/setup-node@v4
