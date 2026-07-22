@@ -384,10 +384,15 @@ a {
   border: 1px solid var(--border);
   background: #05070c;
   box-shadow: var(--shadow);
+  /* Uniform square frame across every case page (shock-tube reference size).
+     Non-square renders are fitted inside with letterboxing. */
+  aspect-ratio: 1 / 1;
 }
 .media-frame video,
 .media-frame img {
   width: 100%;
+  height: 100%;
+  object-fit: contain;
   display: block;
 }
 .meta-table {
