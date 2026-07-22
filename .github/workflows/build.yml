@@ -1,17 +1,16 @@
 name: build
 
-# Pull-request gate: build, run and render only the cases a PR actually
-# affects, and fail if any of them breaks. "Affected" = a case whose own files
-# changed, or - when a shared input changes (the figure engine/scripts or the
-# environment) - every case, matching what invalidates the media-cache keys.
+# Pull-request gate: build, run and render only the cases a PR affects, then
+# assemble the site (without deploying). Fails if an affected case or the site
+# build breaks. "Affected" = a case whose own files changed, or - when a shared
+# input changes (the figure engine/scripts or the environment) - every case,
+# matching what invalidates the media-cache keys.
 #
-# Both caches are restored read-only, so unaffected work is reused and a PR
-# never writes to the caches consumed by the deploy on main:
-#   - per-ref samurai/engine builds  (~/.cache/samurai-gallery)
-#   - rendered media                 (.cache/media, via infra/cache.py)
-# An affected case is a cache miss by construction and is genuinely rebuilt;
-# a case flagged by the diff but whose media key is unchanged (e.g. a README
-# edit) is restored from the media cache and verified for free.
+# Caches are restored read-only: a PR reuses the per-ref samurai builds, the
+# engine env and the rendered media the deploy on main produced, and never
+# writes to the caches the deploy consumes. An affected case is a cache miss by
+# construction and is genuinely rebuilt; a case flagged by the diff but whose
+# media key is unchanged (e.g. a README edit) is restored and verified for free.
 on:
   pull_request:
 
@@ -36,8 +35,9 @@ jobs:
           changed=$(git diff --name-only "$base"...HEAD)
           echo "Changed files:"; echo "$changed"
 
-          # A change to any shared input affects every case.
-          shared='^(infra/galleria/|infra/case_meta\.py|infra/build_case\.sh|infra/cache\.py|infra/ensure_samurai\.sh|environment\.yml)'
+          # A change to any shared input affects every case (the figure engine
+          # and scripts, the environment, or the CI definition itself).
+          shared='^(infra/galleria/|infra/case_meta\.py|infra/build_case\.sh|infra/cache\.py|infra/ensure_samurai\.sh|environment\.yml|\.github/workflows/)'
           if printf '%s\n' "$changed" | grep -qE "$shared"; then
             echo "Shared input changed -> all cases."
             cases=$(for d in cases/*/*/; do [ -f "${d}case.yaml" ] && printf '%s\n' "${d%/}"; done)
@@ -72,8 +72,8 @@ jobs:
           environment-file: environment.yml
           cache-environment: true
 
-      # Read-only: reuse the per-ref builds and media the deploy on main produced;
-      # a bumped ref or changed case is simply a miss and is built fresh here.
+      # Read-only: reuse what the deploy on main produced. A bumped ref or a
+      # changed case is simply a miss and is built fresh here.
       - name: Restore samurai builds (per ref)
         uses: actions/cache/restore@v4
         with:
@@ -82,14 +82,82 @@ jobs:
           restore-keys: |
             samurai-gallery-
 
-      - name: Restore rendered media
+      - name: Restore engine env (samurai-euler-env)
         uses: actions/cache/restore@v4
         with:
-          path: .cache/media
-          key: gallery-media-${{ github.sha }}
+          path: ~/micromamba/envs/samurai-euler-env
+          key: samurai-euler-env-${{ hashFiles('cases/*/*/case.yaml') }}
           restore-keys: |
-            gallery-media-
+            samurai-euler-env-
 
+      - id: key
+        name: Compute media cache key
+        shell: bash -el {0}
+        run: echo "value=$(micromamba run -n samurai-gallery python infra/cache.py key '${{ matrix.case }}' ci)" >> "$GITHUB_OUTPUT"
+
+      - name: Restore rendered media (this case)
+        uses: actions/cache/restore@v4
+        with:
+          path: .cache/media/${{ steps.key.outputs.value }}
+          key: gallery-media-${{ steps.key.outputs.value }}
+
+      # Fatal here: a broken affected case must fail the check.
       - name: Build, run and render ${{ matrix.case }}
         shell: bash -el {0}
         run: bash infra/build_case.sh "${{ matrix.case }}" ci
+
+      - id: slug
+        run: echo "enc=$(echo '${{ matrix.case }}' | tr / _)" >> "$GITHUB_OUTPUT"
+
+      - name: Stage media
+        run: |
+          mkdir -p "artifact/${{ matrix.case }}"
+          cp "${{ matrix.case }}"/thumbnail-dark.png \
+             "${{ matrix.case }}"/thumbnail-light.png \
+             "${{ matrix.case }}"/preview-dark.mp4 \
+             "${{ matrix.case }}"/preview-light.mp4 \
+             "artifact/${{ matrix.case }}/" 2>/dev/null || true
+
+      - name: Upload media
+        uses: actions/upload-artifact@v4
+        with:
+          name: media-${{ steps.slug.outputs.enc }}
+          path: artifact
+          if-no-files-found: warn
+          retention-days: 1
+
+  # Assemble the site (no deploy) so a broken site build is caught before merge.
+  # Runs whether or not any case was affected (doc-only PRs still validate the
+  # site); skips only if the case build failed (the gate is already red then).
+  site:
+    needs: [affected, build]
+    if: always() && needs.affected.result == 'success' && needs.build.result != 'failure'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # A doc-only PR affects no case, so there may be no media artifacts here.
+      - name: Download rendered media
+        continue-on-error: true
+        uses: actions/download-artifact@v4
+        with:
+          path: media-dl
+          pattern: media-*
+          merge-multiple: true
+
+      - name: Place media into case dirs
+        run: |
+          if [ -d media-dl/cases ]; then cp -R media-dl/cases/. cases/; fi
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: site/package-lock.json
+
+      - name: Build the site (no deploy)
+        working-directory: site
+        run: |
+          npm ci
+          npm run build
