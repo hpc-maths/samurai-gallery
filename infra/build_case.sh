@@ -138,9 +138,14 @@ else
 
     BUILD_DIR="$CASE_DIR/build"
     echo ">> configuring and building target '$TARGET' (samurai $SAMURAI_REF)"
+    # samurai's exported CMake target does not always advertise its own include
+    # directory (the installed samurai::samurai omits INTERFACE_INCLUDE_DIRECTORIES),
+    # so add the per-ref prefix include explicitly. Harmless when the target does
+    # export it. -isystem keeps samurai's headers out of the case's warnings.
     cmake -S "$CASE_DIR" -B "$BUILD_DIR" -G Ninja \
         -DCMAKE_BUILD_TYPE=Release \
-        -DCMAKE_PREFIX_PATH="$SAMURAI_PREFIX;${CONDA_PREFIX:-}" >/dev/null
+        -DCMAKE_PREFIX_PATH="$SAMURAI_PREFIX;${CONDA_PREFIX:-}" \
+        -DCMAKE_CXX_FLAGS="-isystem $SAMURAI_PREFIX/include" >/dev/null
     cmake --build "$BUILD_DIR" --target "$TARGET"
     EXE="$BUILD_DIR/$TARGET"
 fi
