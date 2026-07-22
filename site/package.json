@@ -1,0 +1,25 @@
+{
+  "name": "samurai-gallery-site",
+  "type": "module",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "collect-media": "node scripts/collect-media.mjs",
+    "dev": "npm run collect-media && astro dev",
+    "build": "npm run collect-media && astro build",
+    "preview": "astro preview"
+  },
+  "dependencies": {
+    "astro": "^5.6.0",
+    "katex": "^0.16.11",
+    "markdown-it": "^14.1.0",
+    "markdown-it-texmath": "^1.0.0",
+    "yaml": "^2.6.0"
+  },
+  "allowScripts": {
+    "esbuild@0.27.7": true,
+    "esbuild@0.25.12": true,
+    "sharp@0.34.5": true,
+    "fsevents@2.3.3": true
+  }
+}

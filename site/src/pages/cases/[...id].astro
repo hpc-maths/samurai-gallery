@@ -1,0 +1,86 @@
+---
+import { Code } from "astro:components";
+import Base from "../../layouts/Base.astro";
+import {
+  getCases,
+  METHOD_LABELS,
+  ADAPTATION_LABELS,
+  type GalleryCase,
+} from "../../lib/cases";
+import { renderMarkdown } from "../../lib/markdown";
+
+export function getStaticPaths() {
+  return getCases().map((item) => ({
+    params: { id: item.id },
+    props: { item },
+  }));
+}
+
+const { item } = Astro.props as { item: GalleryCase };
+const base = import.meta.env.BASE_URL;
+const href = (p: string) => `${base.replace(/\/$/, "")}/${p.replace(/^\//, "")}`;
+
+const readmeHtml = renderMarkdown(item.readme);
+const methodLabels = item.methods.map((m) => METHOD_LABELS[m] ?? m).join(", ");
+---
+
+<Base title={`${item.title} · samurai gallery`} description={item.summary}>
+  <section class="case-hero">
+    <div class="container">
+      <div class="breadcrumb">
+        <a href={href("/")}>Cases</a> · {item.category.replace(/-/g, " ")}
+      </div>
+      <h1>{item.title}</h1>
+      <p class="summary">{item.summary}</p>
+    </div>
+  </section>
+
+  <div class="container case-layout">
+    <div class="content-col">
+      <div class="prose" set:html={readmeHtml} />
+
+      <h2 class="section-title">Source code <span style="color:var(--text-dim);font-weight:400;font-size:1rem">main.cpp</span></h2>
+      <div class="code-block">
+        <div class="code-head">
+          <span>main.cpp</span>
+          <span>{item.code.split("\n").length} lines</span>
+        </div>
+        <Code code={item.code} lang="cpp" theme="github-dark" />
+      </div>
+
+      {item.references.length > 0 && (
+        <div class="references">
+          <h2 class="section-title">References</h2>
+          <ul>
+            {item.references.map((r) => (
+              <li><a href={r.url} target="_blank" rel="noopener">{r.text}</a></li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </div>
+
+    <aside class="media-col">
+      <div class="media-frame">
+        <video
+          src={href(item.heroUrl)}
+          poster={href(item.thumbnailUrl)}
+          autoplay
+          loop
+          muted
+          playsinline
+        ></video>
+      </div>
+      <div class="meta-table">
+        <div class="row"><span class="k">Method</span><span class="v">{methodLabels}</span></div>
+        <div class="row"><span class="k">Equation</span><span class="v">{item.equation.replace(/-/g, " ")}</span></div>
+        <div class="row"><span class="k">Dimension</span><span class="v">{item.dimension}D</span></div>
+        <div class="row"><span class="k">Mesh</span><span class="v">{ADAPTATION_LABELS[item.adaptation] ?? item.adaptation}</span></div>
+        <div class="row"><span class="k">Difficulty</span><span class="v">{item.difficulty}</span></div>
+        {item.authors.length > 0 && (
+          <div class="row"><span class="k">Authors</span><span class="v">{item.authors.join(", ")}</span></div>
+        )}
+      </div>
+    </aside>
+  </div>
+</Base>

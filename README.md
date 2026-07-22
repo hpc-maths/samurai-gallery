@@ -1,7 +1,7 @@
 # samurai gallery
 
 A curated, auto-generated gallery of simulation cases built with
-[samurai](https://github.com/hpc-math/samurai), the adaptive-mesh (AMR /
+[samurai](https://github.com/hpc-maths/samurai), the adaptive-mesh (AMR /
 multiresolution) library for finite-volume schemes (with finite-difference and
 LBM support on the roadmap).
 

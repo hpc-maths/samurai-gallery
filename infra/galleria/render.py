@@ -73,7 +73,12 @@ def render_series_2d(
     ax.axis("off")
     fig.subplots_adjust(left=0, right=1, bottom=0, top=1)
 
-    writer = matplotlib.animation.FFMpegWriter(fps=fps, bitrate=3200)
+    # yuv420p + faststart make the mp4 stream and autoplay reliably in browsers.
+    writer = matplotlib.animation.FFMpegWriter(
+        fps=fps,
+        bitrate=3200,
+        extra_args=["-pix_fmt", "yuv420p", "-movflags", "+faststart"],
+    )
     thumb_index = len(files) // 2  # a representative mid-run frame
 
     with writer.saving(fig, video, dpi=dpi):
