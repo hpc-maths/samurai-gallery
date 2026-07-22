@@ -17,3 +17,6 @@ site/dist/
 site/.astro/
 site/public/media/
 cases/**/build-engine/
+
+# Local theme preview screenshots
+theme-preview/
