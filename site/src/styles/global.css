@@ -370,8 +370,14 @@ a {
      stretch the content column and shrink the media column. */
   grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
   gap: 40px;
-  padding: 30px 0 90px;
+  padding: 30px 0 24px;
   align-items: start;
+}
+.code-section {
+  padding-bottom: 90px;
+}
+.code-section .section-title {
+  margin-top: 8px;
 }
 @media (max-width: 900px) {
   .case-layout {

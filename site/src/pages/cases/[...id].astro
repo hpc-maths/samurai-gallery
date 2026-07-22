@@ -39,22 +39,6 @@ const methodLabels = item.methods.map((m) => METHOD_LABELS[m] ?? m).join(", ");
     <div class="content-col">
       <div class="prose" set:html={readmeHtml} />
 
-      <h2 class="section-title">Source code <span style="color:var(--text-dim);font-weight:400;font-size:1rem">{item.codeFile}</span></h2>
-      {item.engine && (
-        <p style="color:var(--text-muted);font-size:0.95rem;margin:-2px 0 12px">
-          Powered by the <strong>{item.engine}</strong> solver engine - the code below is
-          this case's scenario (initial &amp; boundary conditions); the flux, time
-          integration and mesh adaptation come from the shared engine.
-        </p>
-      )}
-      <div class="code-block">
-        <div class="code-head">
-          <span>{item.codeFile}</span>
-          <span>{item.code.split("\n").length} lines</span>
-        </div>
-        <Code code={item.code} lang="cpp" theme="github-dark" />
-      </div>
-
       {item.references.length > 0 && (
         <div class="references">
           <h2 class="section-title">References</h2>
@@ -90,4 +74,23 @@ const methodLabels = item.methods.map((m) => METHOD_LABELS[m] ?? m).join(", ");
       </div>
     </aside>
   </div>
+
+  <!-- Source code spans the full width so long C++ lines stay readable. -->
+  <section class="container code-section">
+    <h2 class="section-title">Source code <span style="color:var(--text-dim);font-weight:400;font-size:1rem">{item.codeFile}</span></h2>
+    {item.engine && (
+      <p style="color:var(--text-muted);font-size:0.95rem;margin:-2px 0 14px;max-width:80ch">
+        Powered by the <strong>{item.engine}</strong> solver engine - the code below is
+        this case's scenario (initial &amp; boundary conditions); the flux, time
+        integration and mesh adaptation come from the shared engine.
+      </p>
+    )}
+    <div class="code-block">
+      <div class="code-head">
+        <span>{item.codeFile}</span>
+        <span>{item.code.split("\n").length} lines</span>
+      </div>
+      <Code code={item.code} lang="cpp" theme="github-dark" />
+    </div>
+  </section>
 </Base>
