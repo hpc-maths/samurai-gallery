@@ -1,0 +1,41 @@
+title: 2D Riemann problem (config 3)
+summary: Four constant states meet at a point and interact through shocks, contacts and a rolled-up jet.
+authors:
+  - The samurai-euler team
+methods:
+  - finite-volume
+equation: compressible-euler
+dimension: 2
+adaptation: multiresolution
+difficulty: advanced
+featured: true
+tags:
+  - compressible
+  - riemann
+  - shock-interaction
+  - hllc
+requires:
+  - mpi
+references:
+  - text: "samurai-euler (Euler solver engine)"
+    url: "https://github.com/hpc-maths/samurai-euler"
+  - text: "Schulz-Rinne 2D Riemann configurations"
+    url: "https://doi.org/10.1137/0914082"
+media:
+  thumbnail: thumbnail.png
+  hero: preview.mp4
+env: samurai-euler-env
+engine:
+  source: ../samurai-euler
+  code_file: scenario.hpp
+run:
+  target: euler_2d
+  output_prefix: riemann2d_config3_hllc
+  output_subdir: results
+  profiles:
+    ci:
+      args: ["--test-case", "riemann2d_config3", "--scheme", "hllc", "--Tf", "0.3", "--min-level", "2", "--max-level", "8"]
+      nfiles: 40
+    hero:
+      args: ["--test-case", "riemann2d_config3", "--scheme", "hllc", "--Tf", "0.3", "--min-level", "2", "--max-level", "10"]
+      nfiles: 100
