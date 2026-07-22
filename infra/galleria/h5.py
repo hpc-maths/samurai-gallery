@@ -11,14 +11,19 @@ import numpy as np
 
 
 def _frame_key(path: str):
-    """Natural-sort key: order by the last integer in the file name.
+    """Natural-sort key: order by the trailing frame index in the file name.
 
-    Handles both zero-padded gallery output (``prefix_0007``) and samurai's
+    Handles zero-padded gallery output (``prefix_0007``) and samurai's
     unpadded ``prefix_ite_7`` naming, and puts an ``_init`` snapshot first.
+    Only the number at the *end* of the name (after the extension is removed)
+    is used, so digits inside the prefix (``riemann2d``, ``config3``) or the
+    ``.h5`` extension do not corrupt the ordering.
     """
-    stem = os.path.basename(path)
-    nums = re.findall(r"\d+", stem)
-    return int(nums[-1]) if nums else -1
+    stem = os.path.splitext(os.path.basename(path))[0]
+    if stem.endswith("_init"):
+        return -1
+    m = re.search(r"_(\d+)$", stem)
+    return int(m.group(1)) if m else -1
 
 
 def list_frames(directory: str, prefix: str) -> list[str]:
