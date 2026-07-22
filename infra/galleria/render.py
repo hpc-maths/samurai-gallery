@@ -24,8 +24,8 @@ _ACCENT_2 = "#4cc9f0"
 # Target preview length in seconds. The frame rate is derived per case from
 # this so that all animations run for the same time at a comfortable pace,
 # regardless of how many frames each simulation produced.
-DEFAULT_DURATION = 8.0
-_MIN_FPS = 4.0
+DEFAULT_DURATION = 12.0
+_MIN_FPS = 2.0
 _MAX_FPS = 30.0
 
 
@@ -123,7 +123,9 @@ def render_series_2d(
             artist = ax.add_collection(coll)
             writer.grab_frame(facecolor=_BG)
             if i == thumb_index:
-                fig.savefig(thumbnail, facecolor=_BG, bbox_inches="tight", pad_inches=0)
+                # Full canvas (no tight bbox) so every thumbnail is the same
+                # size as the video frame -> uniform across all cases.
+                fig.savefig(thumbnail, facecolor=_BG)
             artist.remove()
 
     plt.close(fig)
@@ -162,7 +164,8 @@ def render_series_1d(
     pad = 0.08 * (ymax - ymin if ymax > ymin else 1.0)
     ymin, ymax = ymin - pad, ymax + pad
 
-    fig, ax = plt.subplots(figsize=(7, 4.6), dpi=dpi)
+    # Square figure so 1D thumbnails/frames match the 2D ones in size.
+    fig, ax = plt.subplots(figsize=(6, 6), dpi=dpi)
     fig.patch.set_facecolor(_BG)
     ax.set_facecolor(_BG)
     ax.set_xlim(xmin, xmax)
@@ -191,7 +194,7 @@ def render_series_1d(
                 )
             writer.grab_frame(facecolor=_BG)
             if i == thumb_index:
-                fig.savefig(thumbnail, facecolor=_BG, bbox_inches="tight", pad_inches=0.1)
+                fig.savefig(thumbnail, facecolor=_BG)
             for a in artists:
                 a.remove()
 
