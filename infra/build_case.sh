@@ -155,6 +155,12 @@ echo ">> running simulation"
 # (e.g. samurai-euler's "results") land under the case output dir.
 # shellcheck disable=SC2086
 if [ -n "$IS_ENGINE" ]; then
+    # Engine executables link MPI and call MPI_Init even for a single rank. On
+    # cloud CI runners UCX otherwise probes an RDMA/verbs NIC that is not usable
+    # (e.g. Azure "mana": "uct_iface_open(ud_verbs/...) failed"), aborting
+    # intermittently. Restrict UCX to TCP/shared-memory transports so MPI_Init
+    # always succeeds regardless of the host's network hardware.
+    export UCX_TLS="${UCX_TLS:-tcp,self,sm}"
     # Engine executables own their output naming; only --nfiles is common.
     ( cd "$OUT_DIR" && "$EXE" $ARGS --nfiles "$NFILES" )
 else
