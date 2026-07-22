@@ -1,0 +1,31 @@
+title: Burgers equation (2D)
+summary: A radial hat steepens into nonlinear fronts, tracked by the multiresolution mesh.
+authors:
+  - The samurai team
+methods:
+  - finite-volume
+equation: burgers
+dimension: 2
+adaptation: multiresolution
+difficulty: intermediate
+featured: false
+tags:
+  - nonlinear
+  - shock
+  - weno5
+references:
+  - text: "samurai documentation"
+    url: "https://hpc-math-samurai.readthedocs.io"
+media:
+  thumbnail: thumbnail.png
+  hero: preview.mp4
+run:
+  target: gallery-burgers-2d
+  output_prefix: burgers_2d
+  profiles:
+    ci:
+      args: ["--Tf", "1.0", "--min-level", "2", "--max-level", "8"]
+      nfiles: 60
+    hero:
+      args: ["--Tf", "1.0", "--min-level", "2", "--max-level", "10"]
+      nfiles: 120

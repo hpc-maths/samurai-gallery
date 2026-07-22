@@ -1,0 +1,31 @@
+title: Linear convection around an obstacle
+summary: A square profile is carried diagonally past a solid obstacle, tracked by an adaptive mesh.
+authors:
+  - The samurai team
+methods:
+  - finite-volume
+equation: linear-advection
+dimension: 2
+adaptation: multiresolution
+difficulty: intermediate
+featured: false
+tags:
+  - transport
+  - weno5
+  - immersed-geometry
+references:
+  - text: "samurai documentation"
+    url: "https://hpc-math-samurai.readthedocs.io"
+media:
+  thumbnail: thumbnail.png
+  hero: preview.mp4
+run:
+  target: gallery-linear-convection-obstacle
+  output_prefix: linear_convection_obstacle
+  profiles:
+    ci:
+      args: ["--Tf", "3.0", "--min-level", "2", "--max-level", "6"]
+      nfiles: 60
+    hero:
+      args: ["--Tf", "3.0", "--min-level", "2", "--max-level", "8"]
+      nfiles: 120

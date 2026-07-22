@@ -1,0 +1,31 @@
+title: Burgers equation (1D)
+summary: A smooth hat steepens into a shock; the multiresolution mesh follows the front.
+authors:
+  - The samurai team
+methods:
+  - finite-volume
+equation: burgers
+dimension: 1
+adaptation: multiresolution
+difficulty: beginner
+featured: false
+tags:
+  - nonlinear
+  - shock
+  - weno5
+references:
+  - text: "samurai documentation - 1D Burgers tutorial"
+    url: "https://hpc-math-samurai.readthedocs.io"
+media:
+  thumbnail: thumbnail.png
+  hero: preview.mp4
+run:
+  target: gallery-burgers-1d
+  output_prefix: burgers_1d
+  profiles:
+    ci:
+      args: ["--Tf", "1.0", "--min-level", "2", "--max-level", "9"]
+      nfiles: 60
+    hero:
+      args: ["--Tf", "1.0", "--min-level", "2", "--max-level", "12"]
+      nfiles: 120
