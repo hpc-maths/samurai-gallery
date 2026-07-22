@@ -50,6 +50,8 @@
   --header-bg: rgba(246, 248, 251, 0.8);
   --glow-1: rgba(157, 63, 224, 0.1);
   --glow-2: rgba(242, 98, 47, 0.1);
+  /* Light-theme media renders on a light canvas, so the tile backdrop matches. */
+  --media-bg: #f6f8fb;
 }
 
 * {

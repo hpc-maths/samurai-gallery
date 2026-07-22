@@ -3,8 +3,8 @@ build/
 .output/
 
 # Generated media (rendered in CI, deployed to Pages, never committed)
-cases/**/thumbnail.png
-cases/**/preview.mp4
+cases/**/thumbnail*.png
+cases/**/preview*.mp4
 cases/**/*.gif
 
 # Python

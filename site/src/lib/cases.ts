@@ -33,7 +33,6 @@ export interface GalleryCase {
   tags: string[];
   requires: string[];
   references: Reference[];
-  media: { thumbnail: string; hero: string };
   /** raw README.md contents (Markdown + LaTeX) */
   readme: string;
   /** raw source code shown on the case page (main.cpp, or the engine scenario) */
@@ -42,9 +41,11 @@ export interface GalleryCase {
   codeFile: string;
   /** name of the external engine powering this case, if any */
   engine: string | null;
-  /** site-relative media paths (populated by collect-media) */
-  thumbnailUrl: string;
-  heroUrl: string;
+  /** site-relative, theme-specific media paths (populated by collect-media) */
+  thumbnailDarkUrl: string;
+  thumbnailLightUrl: string;
+  heroDarkUrl: string;
+  heroLightUrl: string;
 }
 
 function readIfExists(p: string): string {
@@ -65,9 +66,7 @@ export function getCases(): GalleryCase[] {
       if (!fs.existsSync(yamlPath)) continue;
 
       const meta = parseYaml(fs.readFileSync(yamlPath, "utf-8")) ?? {};
-      const media = meta.media ?? {};
-      const thumbnail = media.thumbnail ?? "thumbnail.png";
-      const hero = media.hero ?? "preview.mp4";
+      const mediaBase = `media/${category}/${slug}`;
 
       // Displayed code: a local main.cpp, or the engine scenario file.
       const engine = meta.engine ?? null;
@@ -89,13 +88,14 @@ export function getCases(): GalleryCase[] {
         tags: meta.tags ?? [],
         requires: meta.requires ?? [],
         references: meta.references ?? [],
-        media: { thumbnail, hero },
         readme: readIfExists(path.join(dir, "README.md")),
         code: readIfExists(path.join(dir, codeFile)),
         codeFile,
         engine: engine?.source ? engine.source.replace(/^\.\.\//, "") : engine ? "engine" : null,
-        thumbnailUrl: `media/${category}/${slug}/${thumbnail}`,
-        heroUrl: `media/${category}/${slug}/${hero}`,
+        thumbnailDarkUrl: `${mediaBase}/thumbnail-dark.png`,
+        thumbnailLightUrl: `${mediaBase}/thumbnail-light.png`,
+        heroDarkUrl: `${mediaBase}/preview-dark.mp4`,
+        heroLightUrl: `${mediaBase}/preview-light.mp4`,
       });
     }
   }

@@ -54,8 +54,13 @@ const methodLabels = item.methods.map((m) => METHOD_LABELS[m] ?? m).join(", ");
     <aside class="media-col">
       <div class="media-frame">
         <video
-          src={href(item.heroUrl)}
-          poster={href(item.thumbnailUrl)}
+          class="theme-media"
+          src={href(item.heroDarkUrl)}
+          poster={href(item.thumbnailDarkUrl)}
+          data-dark={href(item.heroDarkUrl)}
+          data-light={href(item.heroLightUrl)}
+          data-poster-dark={href(item.thumbnailDarkUrl)}
+          data-poster-light={href(item.thumbnailLightUrl)}
           autoplay
           loop
           muted

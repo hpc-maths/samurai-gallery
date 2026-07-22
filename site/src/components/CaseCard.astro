@@ -23,7 +23,15 @@ const dims = `d${item.dimension}`;
 >
   <div class="thumb">
     <div class="placeholder">preview rendering…</div>
-    <img src={href(item.thumbnailUrl)} alt={item.title} loading="lazy" onerror="this.style.display='none'" />
+    <img
+      class="theme-media"
+      src={href(item.thumbnailDarkUrl)}
+      data-dark={href(item.thumbnailDarkUrl)}
+      data-light={href(item.thumbnailLightUrl)}
+      alt={item.title}
+      loading="lazy"
+      onerror="this.style.display='none'"
+    />
     <span class="badge">{item.dimension}D</span>
   </div>
   <div class="body">

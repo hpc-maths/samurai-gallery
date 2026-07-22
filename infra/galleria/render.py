@@ -1,7 +1,9 @@
-"""Render a 2D samurai output series to a thumbnail and a preview video.
+"""Render a samurai output series to theme-aware media.
 
-The look is intentionally uniform across the gallery: dark background, no axes,
-optional light mesh overlay to showcase the adaptive grid.
+Each case produces two variants so the gallery looks right in both themes:
+  - dark:  dark canvas, bright-on-dark colormap, light mesh overlay
+  - light: light canvas, light-low colormap, dark mesh overlay
+Files are written next to the case as thumbnail-<theme>.png / preview-<theme>.mp4.
 """
 
 from __future__ import annotations
@@ -17,10 +19,6 @@ from matplotlib.collections import PolyCollection
 
 from .h5 import list_frames, read_frame_1d, read_frame_2d
 
-_BG = "#0b0f17"
-_ACCENT = "#ff7a45"
-_ACCENT_2 = "#4cc9f0"
-
 # Target preview length in seconds. The frame rate is derived per case from
 # this so that all animations run for the same time at a comfortable pace,
 # regardless of how many frames each simulation produced.
@@ -28,14 +26,58 @@ DEFAULT_DURATION = 12.0
 _MIN_FPS = 2.0
 _MAX_FPS = 30.0
 
+# Per-theme canvas/overlay colors.
+STYLES = {
+    "dark": {
+        "bg": "#0b0f17",
+        "grid": "#ffffff",
+        "line": "#ff7a45",
+        "marker": "#4cc9f0",
+        "spine": "#2a3446",
+        "tick": "#6b7891",
+        "gridline": "#1a2333",
+    },
+    "light": {
+        "bg": "#f6f8fb",
+        "grid": "#2b3648",
+        "line": "#e15828",
+        "marker": "#1391c4",
+        "spine": "#c3ccd8",
+        "tick": "#8b95a6",
+        "gridline": "#e0e6ef",
+    },
+}
+
+# Light-theme replacement for dark-optimized colormaps: keep the same hue
+# family but with a light (near-white) low end so empty regions blend into the
+# light page. Diverging maps (white center) already work on both themes.
+LIGHT_CMAP = {
+    "magma": "YlOrRd",
+    "inferno": "YlOrRd",
+    "plasma": "YlOrRd",
+    "viridis": "YlGnBu",
+    "cividis": "YlGnBu",
+    "RdBu": "RdBu",
+    "RdBu_r": "RdBu_r",
+    "coolwarm": "coolwarm",
+}
+
 
 def _fps_for(n_frames: int, duration: float, override):
-    """Frame rate that plays ``n_frames`` over ``duration`` seconds."""
     if override:
         return override
     if duration <= 0 or n_frames <= 1:
         return _MIN_FPS
     return min(_MAX_FPS, max(_MIN_FPS, n_frames / duration))
+
+
+def _writer(fps):
+    # yuv420p + faststart make the mp4 stream and autoplay reliably in browsers.
+    return matplotlib.animation.FFMpegWriter(
+        fps=fps,
+        bitrate=3200,
+        extra_args=["-pix_fmt", "yuv420p", "-movflags", "+faststart"],
+    )
 
 
 def _compute_range(files, field, component=None, symmetric=False):
@@ -52,16 +94,43 @@ def _compute_range(files, field, component=None, symmetric=False):
     return lo, hi
 
 
-def _make_collection(polys, values, vmin, vmax, cmap, show_grid):
+def _make_collection(polys, values, vmin, vmax, cmap, show_grid, grid_color):
     coll = PolyCollection(
         polys,
         array=values,
         cmap=cmap,
-        edgecolors="white" if show_grid else "none",
+        edgecolors=grid_color if show_grid else "none",
         linewidths=0.15 if show_grid else 0.0,
     )
     coll.set_clim(vmin, vmax)
     return coll
+
+
+def _render_2d_variant(
+    files, field, component, vmin, vmax, extent, cmap, show_grid, style, thumb_index, fps, dpi, thumb_out, video_out
+):
+    bg = style["bg"]
+    xmin, ymin, xmax, ymax = extent
+    fig, ax = plt.subplots(figsize=(6, 6), dpi=dpi)
+    fig.patch.set_facecolor(bg)
+    ax.set_facecolor(bg)
+    ax.set_xlim(xmin, xmax)
+    ax.set_ylim(ymin, ymax)
+    ax.set_aspect("equal")
+    ax.axis("off")
+    fig.subplots_adjust(left=0, right=1, bottom=0, top=1)
+
+    writer = _writer(fps)
+    with writer.saving(fig, video_out, dpi=dpi):
+        for i, path in enumerate(files):
+            polys, values = read_frame_2d(path, field, component)
+            coll = _make_collection(polys, values, vmin, vmax, cmap, show_grid, style["grid"])
+            artist = ax.add_collection(coll)
+            writer.grab_frame(facecolor=bg)
+            if i == thumb_index:
+                fig.savefig(thumb_out, facecolor=bg)
+            artist.remove()
+    plt.close(fig)
 
 
 def render_series_2d(
@@ -72,64 +141,72 @@ def render_series_2d(
     component=None,
     symmetric: bool = False,
     thumb_frac: float = 0.5,
-    thumbnail: str = "thumbnail.png",
-    video: str = "preview.mp4",
     cmap: str = "magma",
+    cmap_light: str | None = None,
     show_grid: bool = True,
     duration: float = DEFAULT_DURATION,
     fps: float | None = None,
     dpi: int = 130,
 ):
-    """Render every frame of a series; write ``video`` and ``thumbnail``.
+    """Render a 2D series to dark and light media variants.
 
-    ``symmetric`` clamps the color scale to [-M, M] (useful for signed fields
-    such as a level set, so the zero level sits at the middle of the colormap).
-    ``thumb_frac`` selects which frame becomes the thumbnail (0 = first,
-    1 = last); use a late frame for cases whose structure develops over time.
-    ``duration`` sets the target video length in seconds; the frame rate is
-    derived from it so every case animates at the same pace regardless of how
-    many frames it has (pass ``fps`` to override).
+    Writes thumbnail-dark.png, thumbnail-light.png, preview-dark.mp4 and
+    preview-light.mp4 in the current directory.
+
+    ``symmetric`` clamps the color scale to [-M, M] (for signed fields such as a
+    level set). ``thumb_frac`` selects the thumbnail frame (0 first, 1 last).
+    ``duration`` is the target video length; the frame rate is derived from it.
+    ``cmap`` is the dark-theme colormap; the light-theme one defaults to a
+    light-low equivalent (see LIGHT_CMAP), overridable via ``cmap_light``.
     """
     files = list_frames(directory, prefix)
     fps = _fps_for(len(files), duration, fps)
     vmin, vmax = _compute_range(files, field, component, symmetric)
 
-    # Domain extent from the first frame.
     polys0, _ = read_frame_2d(files[0], field, component)
     xmin, ymin = polys0.reshape(-1, 2).min(axis=0)
     xmax, ymax = polys0.reshape(-1, 2).max(axis=0)
-
-    fig, ax = plt.subplots(figsize=(6, 6), dpi=dpi)
-    fig.patch.set_facecolor(_BG)
-    ax.set_facecolor(_BG)
-    ax.set_xlim(xmin, xmax)
-    ax.set_ylim(ymin, ymax)
-    ax.set_aspect("equal")
-    ax.axis("off")
-    fig.subplots_adjust(left=0, right=1, bottom=0, top=1)
-
-    # yuv420p + faststart make the mp4 stream and autoplay reliably in browsers.
-    writer = matplotlib.animation.FFMpegWriter(
-        fps=fps,
-        bitrate=3200,
-        extra_args=["-pix_fmt", "yuv420p", "-movflags", "+faststart"],
-    )
+    extent = (xmin, ymin, xmax, ymax)
     thumb_index = min(len(files) - 1, max(0, round((len(files) - 1) * thumb_frac)))
 
-    with writer.saving(fig, video, dpi=dpi):
-        for i, path in enumerate(files):
-            polys, values = read_frame_2d(path, field, component)
-            coll = _make_collection(polys, values, vmin, vmax, cmap, show_grid)
-            artist = ax.add_collection(coll)
-            writer.grab_frame(facecolor=_BG)
-            if i == thumb_index:
-                # Full canvas (no tight bbox) so every thumbnail is the same
-                # size as the video frame -> uniform across all cases.
-                fig.savefig(thumbnail, facecolor=_BG)
-            artist.remove()
+    light_cmap = cmap_light or LIGHT_CMAP.get(cmap, cmap)
+    for theme, style in STYLES.items():
+        _render_2d_variant(
+            files, field, component, vmin, vmax, extent,
+            cmap if theme == "dark" else light_cmap,
+            show_grid, style, thumb_index, fps, dpi,
+            f"thumbnail-{theme}.png", f"preview-{theme}.mp4",
+        )
 
+
+def _render_1d_variant(files, field, extent, show_cells, style, thumb_index, fps, dpi, thumb_out, video_out):
+    bg = style["bg"]
+    xmin, xmax, ymin, ymax = extent
+    fig, ax = plt.subplots(figsize=(6, 6), dpi=dpi)
+    fig.patch.set_facecolor(bg)
+    ax.set_facecolor(bg)
+    ax.set_xlim(xmin, xmax)
+    ax.set_ylim(ymin, ymax)
+    for spine in ax.spines.values():
+        spine.set_color(style["spine"])
+    ax.tick_params(colors=style["tick"], labelsize=8)
+    ax.grid(True, color=style["gridline"], linewidth=0.6)
+    fig.subplots_adjust(left=0.08, right=0.97, bottom=0.1, top=0.96)
+
+    writer = _writer(fps)
+    with writer.saving(fig, video_out, dpi=dpi):
+        for i, path in enumerate(files):
+            x, values = read_frame_1d(path, field)
+            (line,) = ax.plot(x, values, color=style["line"], linewidth=2.0)
+            artists = [line]
+            if show_cells:
+                artists.append(ax.scatter(x, values, s=6, color=style["marker"], alpha=0.8, zorder=3))
+            writer.grab_frame(facecolor=bg)
+            if i == thumb_index:
+                fig.savefig(thumb_out, facecolor=bg)
+            for a in artists:
+                a.remove()
     plt.close(fig)
-    return thumbnail, video
 
 
 def render_series_1d(
@@ -137,21 +214,12 @@ def render_series_1d(
     prefix: str,
     field: str = "u",
     *,
-    thumbnail: str = "thumbnail.png",
-    video: str = "preview.mp4",
-    color: str = _ACCENT,
     show_cells: bool = True,
     duration: float = DEFAULT_DURATION,
     fps: float | None = None,
     dpi: int = 130,
 ):
-    """Render a 1D output series as an animated line plot.
-
-    Cell centers are marked (``show_cells``) so the viewer sees where the
-    adaptive mesh concentrates points. ``duration`` sets the target video
-    length in seconds; the frame rate is derived from it (pass ``fps`` to
-    override) so every case animates at the same pace.
-    """
+    """Render a 1D series to dark and light animated line-plot variants."""
     files = list_frames(directory, prefix)
     fps = _fps_for(len(files), duration, fps)
 
@@ -162,41 +230,11 @@ def render_series_1d(
         xmin, xmax = min(xmin, x.min()), max(xmax, x.max())
         ymin, ymax = min(ymin, values.min()), max(ymax, values.max())
     pad = 0.08 * (ymax - ymin if ymax > ymin else 1.0)
-    ymin, ymax = ymin - pad, ymax + pad
-
-    # Square figure so 1D thumbnails/frames match the 2D ones in size.
-    fig, ax = plt.subplots(figsize=(6, 6), dpi=dpi)
-    fig.patch.set_facecolor(_BG)
-    ax.set_facecolor(_BG)
-    ax.set_xlim(xmin, xmax)
-    ax.set_ylim(ymin, ymax)
-    for spine in ax.spines.values():
-        spine.set_color("#2a3446")
-    ax.tick_params(colors="#6b7891", labelsize=8)
-    ax.grid(True, color="#1a2333", linewidth=0.6)
-    fig.subplots_adjust(left=0.08, right=0.97, bottom=0.1, top=0.96)
-
-    writer = matplotlib.animation.FFMpegWriter(
-        fps=fps,
-        bitrate=3200,
-        extra_args=["-pix_fmt", "yuv420p", "-movflags", "+faststart"],
-    )
+    extent = (xmin, xmax, ymin - pad, ymax + pad)
     thumb_index = len(files) // 2
 
-    with writer.saving(fig, video, dpi=dpi):
-        for i, path in enumerate(files):
-            x, values = read_frame_1d(path, field)
-            (line,) = ax.plot(x, values, color=color, linewidth=2.0)
-            artists = [line]
-            if show_cells:
-                artists.append(
-                    ax.scatter(x, values, s=6, color=_ACCENT_2, alpha=0.7, zorder=3)
-                )
-            writer.grab_frame(facecolor=_BG)
-            if i == thumb_index:
-                fig.savefig(thumbnail, facecolor=_BG)
-            for a in artists:
-                a.remove()
-
-    plt.close(fig)
-    return thumbnail, video
+    for theme, style in STYLES.items():
+        _render_1d_variant(
+            files, field, extent, show_cells, style, thumb_index, fps, dpi,
+            f"thumbnail-{theme}.png", f"preview-{theme}.mp4",
+        )

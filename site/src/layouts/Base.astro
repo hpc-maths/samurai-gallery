@@ -72,6 +72,31 @@ const href = (p: string) => `${base.replace(/\/$/, "")}/${p.replace(/^\//, "")}`
     </footer>
 
     <script is:inline>
+      // Swap every theme-aware media element (cards + case video) to the
+      // variant matching the active theme.
+      function applyThemeMedia() {
+        var light = document.documentElement.dataset.theme === "light";
+        document.querySelectorAll(".theme-media").forEach(function (el) {
+          var url = light ? el.dataset.light : el.dataset.dark;
+          if (!url) return;
+          if (el.tagName === "VIDEO") {
+            var poster = light ? el.dataset.posterLight : el.dataset.posterDark;
+            if (el.getAttribute("src") !== url) {
+              el.src = url;
+              if (poster) el.poster = poster;
+              el.load();
+              var p = el.play();
+              if (p && p.catch) p.catch(function () {});
+            }
+          } else if (el.getAttribute("src") !== url) {
+            el.style.display = "";
+            el.src = url;
+          }
+        });
+      }
+      applyThemeMedia();
+      document.addEventListener("DOMContentLoaded", applyThemeMedia);
+
       document.getElementById("theme-toggle")?.addEventListener("click", function () {
         var cur = document.documentElement.dataset.theme === "light" ? "light" : "dark";
         var next = cur === "light" ? "dark" : "light";
@@ -79,6 +104,7 @@ const href = (p: string) => `${base.replace(/\/$/, "")}/${p.replace(/^\//, "")}`
         try {
           localStorage.setItem("theme", next);
         } catch (e) {}
+        applyThemeMedia();
       });
     </script>
   </body>

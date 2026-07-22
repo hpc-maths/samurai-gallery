@@ -8,7 +8,12 @@ const ROOT = path.resolve(process.cwd(), "..");
 const CASES = path.join(ROOT, "cases");
 const DEST = path.resolve(process.cwd(), "public", "media");
 
-const MEDIA_FILES = ["thumbnail.png", "preview.mp4"];
+const MEDIA_FILES = [
+  "thumbnail-dark.png",
+  "thumbnail-light.png",
+  "preview-dark.mp4",
+  "preview-light.mp4",
+];
 
 let copied = 0;
 let missing = 0;
