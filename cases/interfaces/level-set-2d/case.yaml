@@ -1,0 +1,31 @@
+title: Level-set in a vortex flow
+summary: A circular interface is stretched into a filament by a swirling flow, tracked by the adaptive mesh.
+authors:
+  - The samurai team
+methods:
+  - finite-volume
+equation: level-set-advection
+dimension: 2
+adaptation: multiresolution
+difficulty: advanced
+featured: true
+tags:
+  - interface
+  - level-set
+  - reinitialization
+references:
+  - text: "samurai documentation - level-set tutorial"
+    url: "https://hpc-math-samurai.readthedocs.io"
+media:
+  thumbnail: thumbnail.png
+  hero: preview.mp4
+run:
+  target: gallery-level-set-2d
+  output_prefix: level_set_2d
+  profiles:
+    ci:
+      args: ["--Tf", "3.14", "--min-level", "4", "--max-level", "8"]
+      nfiles: 80
+    hero:
+      args: ["--Tf", "3.14", "--min-level", "4", "--max-level", "10"]
+      nfiles: 160

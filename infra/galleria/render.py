@@ -22,12 +22,15 @@ _ACCENT = "#ff7a45"
 _ACCENT_2 = "#4cc9f0"
 
 
-def _compute_range(files, field, component=None):
+def _compute_range(files, field, component=None, symmetric=False):
     lo, hi = np.inf, -np.inf
     for path in files:
         _, values = read_frame_2d(path, field, component)
         lo = min(lo, float(values.min()))
         hi = max(hi, float(values.max()))
+    if symmetric:
+        m = max(abs(lo), abs(hi))
+        lo, hi = -m, m
     if hi - lo < 1e-12:
         hi = lo + 1e-12
     return lo, hi
@@ -51,6 +54,7 @@ def render_series_2d(
     field: str = "u",
     *,
     component=None,
+    symmetric: bool = False,
     thumbnail: str = "thumbnail.png",
     video: str = "preview.mp4",
     cmap: str = "magma",
@@ -58,9 +62,13 @@ def render_series_2d(
     fps: int = 15,
     dpi: int = 130,
 ):
-    """Render every frame of a series; write ``video`` and ``thumbnail``."""
+    """Render every frame of a series; write ``video`` and ``thumbnail``.
+
+    ``symmetric`` clamps the color scale to [-M, M] (useful for signed fields
+    such as a level set, so the zero level sits at the middle of the colormap).
+    """
     files = list_frames(directory, prefix)
-    vmin, vmax = _compute_range(files, field, component)
+    vmin, vmax = _compute_range(files, field, component, symmetric)
 
     # Domain extent from the first frame.
     polys0, _ = read_frame_2d(files[0], field, component)
