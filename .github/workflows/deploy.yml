@@ -79,6 +79,16 @@ jobs:
           restore-keys: |
             samurai-euler-env-
 
+      # The two-scale isothermal engine conda env (samurai-0.27), so its cases
+      # do not recreate it from scratch every run.
+      - name: Cache engine env (samurai-0.27)
+        uses: actions/cache@v4
+        with:
+          path: ~/micromamba/envs/samurai-0.27
+          key: samurai-0.27-env-${{ hashFiles('cases/*/*/case.yaml') }}
+          restore-keys: |
+            samurai-0.27-env-
+
       - id: key
         name: Compute media cache key
         shell: bash -el {0}

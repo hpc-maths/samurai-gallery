@@ -92,6 +92,11 @@
       "description": "For cases powered by an external solver (e.g. samurai-euler) instead of a local main.cpp. When present, main.cpp is not required; the case clones this git repository, builds 'run.target' from its CMake project in 'env', and displays 'code_file' on the site.",
       "required": ["repo", "ref", "env", "code_file"],
       "properties": {
+        "inputs": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Case-local files (relative to the case dir) staged into the run directory before the engine runs, for solvers that read a config file (e.g. input.json) from the working directory."
+        },
         "repo": {
           "type": "string",
           "description": "Engine git repository, as 'owner/name' or a full clone URL (e.g. hpc-maths/samurai-euler)."

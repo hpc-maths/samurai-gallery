@@ -116,10 +116,20 @@ if [ -n "$IS_ENGINE" ]; then
         echo "$ENGINE_REF" > "$ENGINE_SRC/.engine-ref"
     fi
 
-    # Create the engine environment from the checkout if it is missing.
+    # Create the engine environment from the checkout if it is missing. Engine
+    # repos usually name their file conda/environment.yml, but some use a
+    # variant (e.g. conda/environment_samurai.yml); pick the first match.
     if [ ! -d "$MAMBA_ROOT/envs/$ENV" ]; then
-        echo ">> creating engine env '$ENV' from $ENGINE_SRC/conda/environment.yml"
-        micromamba create -y -n "$ENV" -f "$ENGINE_SRC/conda/environment.yml"
+        ENV_FILE=""
+        for cand in "$ENGINE_SRC/conda/environment.yml" "$ENGINE_SRC"/conda/environment*.yml; do
+            [ -f "$cand" ] && { ENV_FILE="$cand"; break; }
+        done
+        if [ -z "$ENV_FILE" ]; then
+            echo "!! no conda environment file found under $ENGINE_SRC/conda" >&2
+            exit 1
+        fi
+        echo ">> creating engine env '$ENV' from $ENV_FILE"
+        micromamba create -y -n "$ENV" -f "$ENV_FILE"
     fi
 
     activate "$ENV"
@@ -129,7 +139,10 @@ if [ -n "$IS_ENGINE" ]; then
         -DCMAKE_BUILD_TYPE=Release \
         -DCMAKE_PREFIX_PATH="${CONDA_PREFIX:-}" >/dev/null
     cmake --build "$BUILD_DIR" --target "$TARGET" -j4
-    EXE=$(find "$BUILD_DIR" -name "$TARGET" -type f -perm -111 | head -1)
+    # Some engines set RUNTIME_OUTPUT_DIRECTORY to their own source tree, so the
+    # binary may land in $ENGINE_SRC rather than $BUILD_DIR; search both, build
+    # dir first so a fresh build wins over any stale copy.
+    EXE=$(find "$BUILD_DIR" "$ENGINE_SRC" -name "$TARGET" -type f -perm -111 2>/dev/null | head -1)
 else
     # Build samurai at the tested ref (cached per ref), then the case against it.
     activate "$ENV"
@@ -161,6 +174,11 @@ if [ -n "$IS_ENGINE" ]; then
     # intermittently. Restrict UCX to TCP/shared-memory transports so MPI_Init
     # always succeeds regardless of the host's network hardware.
     export UCX_TLS="${UCX_TLS:-tcp,self,sm}"
+    # Stage case-local inputs (e.g. input.json) the solver reads from its
+    # working directory. Names are simple (no spaces) by convention.
+    for f in ${ENGINE_INPUTS:-}; do
+        cp "$CASE_DIR/$f" "$OUT_DIR/"
+    done
     # Engine executables own their output naming; only --nfiles is common.
     ( cd "$OUT_DIR" && "$EXE" $ARGS --nfiles "$NFILES" )
 else

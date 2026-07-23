@@ -40,6 +40,8 @@ def main(yaml_path: str, profile: str) -> None:
         print(f"ENV={shlex.quote(engine['env'])}")
         print(f"ENGINE_REPO={shlex.quote(engine['repo'])}")
         print(f"ENGINE_REF={shlex.quote(engine['ref'])}")
+        inputs = " ".join(shlex.quote(str(i)) for i in engine.get("inputs", []))
+        print(f"ENGINE_INPUTS={shlex.quote(inputs)}")
         print("SAMURAI_REPO=''")
         print("SAMURAI_REF=''")
     else:
