@@ -1,0 +1,44 @@
+title: Two-scale isothermal atomization
+summary: "An air jet shears a liquid column that atomizes, with inter-scale mass transfer feeding a disperse phase."
+authors:
+  - Giuseppe Orlando
+methods:
+  - finite-volume
+equation: two-phase-capillarity
+dimension: 2
+adaptation: multiresolution
+difficulty: advanced
+featured: false
+tags:
+  - two-phase
+  - capillarity
+  - surface-tension
+  - atomization
+  - mass-transfer
+requires:
+  - mpi
+references:
+  - text: "A two-scale two-phase flow model for the separate-to-disperse phase transition in atomizing flows (hal-05673253)"
+    url: "https://hal.science/hal-05673253"
+  - text: "Two-scale isothermal solver (samurai engine)"
+    url: "https://github.com/hpc-maths/2026_06_two_scale_isothermal"
+media:
+  thumbnail: thumbnail.png
+  hero: preview.mp4
+engine:
+  repo: hpc-maths/2026_06_two_scale_isothermal
+  ref: bb8101f4fae0504d64150b2171bd261ff4c54403
+  env: samurai-0.27
+  code_file: two_scale_capillarity.cpp
+  inputs:
+    - input.json
+run:
+  target: two_scale_capillarity
+  output_prefix: liquid_column_HLLC_order2_mass_transfer
+  profiles:
+    ci:
+      args: ["--Tf", "0.4", "--min-level", "3", "--max-level", "7"]
+      nfiles: 30
+    hero:
+      args: ["--Tf", "2.5", "--min-level", "3", "--max-level", "9"]
+      nfiles: 100

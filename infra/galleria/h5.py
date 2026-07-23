@@ -26,13 +26,25 @@ def _frame_key(path: str):
     return int(m.group(1)) if m else -1
 
 
+def _is_frame(path: str) -> bool:
+    """True for time-series frames, False for auxiliary dumps sharing the prefix.
+
+    Some solvers also write restart/diagnostic files under the same prefix
+    (``<prefix>_restart.h5``, ``<prefix>_diverged.h5``) whose HDF5 layout is not
+    the explicit-mesh export the renderer reads. A frame is either an ``_init``
+    snapshot or ends in a numeric index (``_0007``, ``_ite_00007``).
+    """
+    stem = os.path.splitext(os.path.basename(path))[0]
+    return stem.endswith("_init") or re.search(r"_(\d+)$", stem) is not None
+
+
 def list_frames(directory: str, prefix: str) -> list[str]:
     """Return the frame ``.h5`` files for a given prefix, in time order.
 
     samurai writes one file per output step, e.g. ``<prefix>_<frame>.h5``.
     """
     pattern = os.path.join(directory, f"{prefix}_*.h5")
-    files = sorted(glob.glob(pattern), key=_frame_key)
+    files = sorted((p for p in glob.glob(pattern) if _is_frame(p)), key=_frame_key)
     if not files:
         raise FileNotFoundError(f"no frames matching {pattern!r}")
     return files
