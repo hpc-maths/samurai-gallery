@@ -4,8 +4,9 @@ A liquid column is suddenly exposed to a fast air stream. The shear tears the
 column apart, stretching it into ligaments that break into a fine spray. This
 is the *separate-to-disperse* transition at the heart of primary atomization.
 
-The case is the air-blasted liquid column of Section 5.2 of Orlando &
-Massot, computed with a **unified two-scale two-phase model**: the same set of
+The case is the air-blasted liquid column of Section 5.2 of [the reference
+paper](https://hal.science/hal-05673253), computed with a **unified two-scale
+two-phase model**: the same set of
 equations describes both the resolved (large-scale) interface and an unresolved
 (small-scale) disperse phase, and an inter-scale **mass transfer** moves liquid
 from one representation to the other when the interface curvature exceeds a
