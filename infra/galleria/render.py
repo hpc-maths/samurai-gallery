@@ -83,8 +83,8 @@ _RANGE_SAMPLE = 200_000
 
 # Theme of the 1D line plots (matches the site background).
 STYLES_1D = {
-    "dark": {"bg": "#101011", "axis": "#5a5a60", "rug": "#ececec"},
-    "light": {"bg": "#f4f1ea", "axis": "#a49d90", "rug": "#1a1815"},
+    "dark": {"bg": "#0b0c0e", "axis": "#8a929c", "rug": "#e8eaed"},
+    "light": {"bg": "#e6e8eb", "axis": "#4b525c", "rug": "#121418"},
 }
 
 
