@@ -2,8 +2,9 @@
 """Generate the media for the level-set-2d case.
 
 phi is a signed distance: phi < 0 inside the interface, phi > 0 outside.
-A symmetric diverging colormap puts the zero level (the interface) at the
-center of the color scale.
+The diverging colormap is centered on 0, so the zero level (the interface)
+sits at its neutral middle. Each side of the interface uses its own range,
+which keeps the thin inside region as readable as the outside.
 """
 
 import sys
@@ -16,8 +17,7 @@ def main(output_dir: str) -> None:
         output_dir,
         prefix="level_set_2d",
         field="phi",
-        symmetric=True,
-        cmap="RdBu_r",
+        diverging=True,
         show_grid=True,
     )
 

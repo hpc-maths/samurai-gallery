@@ -11,7 +11,6 @@ def main(output_dir: str) -> None:
         output_dir,
         prefix="double_mach_reflection_hllc",
         field="rho",
-        cmap="inferno",
         show_grid=True,
         thumb_frac=1.0,  # the double Mach structure is fully formed at the end
     )

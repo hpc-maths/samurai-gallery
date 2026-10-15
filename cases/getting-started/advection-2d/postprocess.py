@@ -15,7 +15,6 @@ def main(output_dir: str) -> None:
         output_dir,
         prefix="advection_2d",
         field="u",
-        cmap="magma",
         show_grid=True,
     )
 

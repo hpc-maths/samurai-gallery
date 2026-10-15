@@ -12,7 +12,6 @@ def main(output_dir: str) -> None:
         prefix="burgers_2d",
         field="u",
         component=None,  # magnitude of the vector field
-        cmap="magma",
         show_grid=True,
     )
 

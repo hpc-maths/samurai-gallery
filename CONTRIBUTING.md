@@ -34,6 +34,23 @@ files:
 Generated media (`thumbnail.png`, `preview.mp4`) are **not committed**: they are
 rendered in CI and deployed with the site.
 
+### Figure conventions
+
+`galleria` gives every case the same look, so `postprocess.py` only says what to
+plot:
+
+- Colors come from the gallery palette: `lipari` for ordinary fields, `vik`
+  for signed fields (pass `diverging=True`, or `symmetric=True` to force a range
+  of [-M, M]). Don't pick a colormap per case. `cmap=` exists for the rare field
+  the palette can't show.
+- The color range is computed from the whole run and ignores outliers. Pass
+  `vrange=(lo, hi)` when the field has a known physical range.
+- The mesh is drawn on every cell, with a border width proportional to the
+  cell, so you can see refinement at every level. `show_grid=False` turns it
+  off.
+- `thumb_frac` picks the thumbnail frame. Choose the moment when the structure
+  is fully formed.
+
 ## `case.yaml` essentials
 
 - `methods`, `equation`, `dimension`, `adaptation` drive the website filters.

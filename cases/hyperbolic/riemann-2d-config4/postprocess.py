@@ -11,7 +11,6 @@ def main(output_dir: str) -> None:
         output_dir,
         prefix="riemann2d_config4_hllc",
         field="rho",
-        cmap="inferno",
         show_grid=True,
     )
 

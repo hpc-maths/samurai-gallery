@@ -2,7 +2,7 @@
 """Generate the media for the two-scale-capillarity case.
 
 alpha_l is the large-scale liquid volume fraction: 1 in the liquid column,
-0 in the surrounding gas. A sequential colormap shows the column being sheared
+0 in the surrounding gas. The sequential gallery colormap shows the column being sheared
 by the air jet and shedding ligaments as it atomizes.
 """
 
@@ -16,7 +16,6 @@ def main(output_dir: str) -> None:
         output_dir,
         prefix="liquid_column_HLLC_order2_mass_transfer",
         field="alpha_l",
-        cmap="viridis",
         show_grid=True,
         thumb_frac=0.7,  # the atomizing spray is well developed past mid-run
     )
