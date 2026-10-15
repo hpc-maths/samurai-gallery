@@ -20,6 +20,7 @@ dependencies:
   - h5py
   - numpy
   - matplotlib
+  - cmcrameri
   - ffmpeg
   # Tooling for the gallery generator and CI
   - pyyaml

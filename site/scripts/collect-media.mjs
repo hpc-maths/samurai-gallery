@@ -1,4 +1,4 @@
-// Copy each case's generated media (thumbnail.png, preview.mp4) into
+// Copy each case's generated media (thumbnails, previews, media.json) into
 // public/media/<category>/<slug>/ so the built site can serve them.
 // Missing media are skipped: the site falls back to a placeholder.
 import fs from "node:fs";
@@ -13,6 +13,7 @@ const MEDIA_FILES = [
   "thumbnail-light.png",
   "preview-dark.mp4",
   "preview-light.mp4",
+  "media.json",
 ];
 
 let copied = 0;

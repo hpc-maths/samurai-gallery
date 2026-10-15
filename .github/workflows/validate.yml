@@ -1,7 +1,8 @@
 name: validate
 
 # Fast checks on every push and pull request: each case must satisfy the
-# schema and have its required files. No compilation here.
+# schema and have its required files, and the galleria unit tests pass. No
+# compilation here.
 on:
   push:
     branches: [main]
@@ -19,7 +20,10 @@ jobs:
           python-version: "3.12"
 
       - name: Install validation deps
-        run: python -m pip install pyyaml jsonschema
+        run: python -m pip install pyyaml jsonschema numpy h5py matplotlib cmcrameri pytest
 
       - name: Validate all cases
         run: python infra/validate.py
+
+      - name: Test galleria
+        run: python -m pytest -q infra/tests

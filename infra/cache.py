@@ -64,7 +64,13 @@ def _sha256_file(path: Path) -> str:
     return h.hexdigest()
 
 
+# Metadata written next to the media by galleria (see render.py).
+_MEDIA_META = "media.json"
+
+
 def _is_media(name: str) -> bool:
+    if name == _MEDIA_META:
+        return True
     return name.endswith(_MEDIA_SUFFIXES) and name.startswith(_MEDIA_PREFIXES)
 
 

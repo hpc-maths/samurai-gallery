@@ -11,7 +11,6 @@ def main(output_dir: str) -> None:
         output_dir,
         prefix="linear_convection_obstacle",
         field="u",
-        cmap="magma",
         show_grid=True,
     )
 

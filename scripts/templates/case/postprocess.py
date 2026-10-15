@@ -11,7 +11,6 @@ def main(output_dir: str) -> None:
         output_dir,
         prefix="__SLUG__",
         field="u",       # name of the field written by main.cpp
-        cmap="magma",
         show_grid=True,
     )
 

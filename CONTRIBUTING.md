@@ -34,6 +34,23 @@ files:
 Generated media (`thumbnail.png`, `preview.mp4`) are **not committed**: they are
 rendered in CI and deployed with the site.
 
+### Figure conventions
+
+`galleria` gives every case the same look, so `postprocess.py` only says what to
+plot:
+
+- Colors come from the gallery palette: `lipari` for ordinary fields, `vik`
+  for signed fields (pass `diverging=True`, or `symmetric=True` to force a range
+  of [-M, M]). Don't pick a colormap per case. `cmap=` exists for the rare field
+  the palette can't show.
+- The color range is computed from the whole run and ignores outliers. Pass
+  `vrange=(lo, hi)` when the field has a known physical range.
+- The mesh is drawn on every cell, with a border width proportional to the
+  cell, so you can see refinement at every level. `show_grid=False` turns it
+  off.
+- `thumb_frac` picks the thumbnail frame. Choose the moment when the structure
+  is fully formed.
+
 ## `case.yaml` essentials
 
 - `methods`, `equation`, `dimension`, `adaptation` drive the website filters.
@@ -71,10 +88,17 @@ its `conda/environment.yml` if missing, and builds `run.target`:
 ```yaml
 engine:
   repo: hpc-maths/samurai-euler   # git repository
-  ref: main                       # tested ref
+  ref: 700f37a98ada02d5aa00331683e44da6fe4d9fd9  # tested commit
   env: samurai-euler-env          # conda env (provides samurai for this case)
   code_file: scenario.hpp         # source shown on the site
 ```
+
+Pin `ref` to a commit, not a branch. `code_file` is a copy of the engine's
+scenario, so it only matches what runs at the commit it was copied from. On a
+branch, the engine can rename the test case, change its options or fix its
+constants, and the case breaks or shows code that no longer runs. To move a
+case to a newer engine, update `ref`, the copied `code_file` and the `args`
+together.
 
 ## Conventions for `main.cpp`
 

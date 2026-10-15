@@ -11,7 +11,6 @@ def main(output_dir: str) -> None:
         output_dir,
         prefix="sedov_blast_hllc",
         field="rho",
-        cmap="inferno",
         show_grid=True,
     )
 

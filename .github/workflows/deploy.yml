@@ -126,6 +126,7 @@ jobs:
              "${{ matrix.case }}"/thumbnail-light.png \
              "${{ matrix.case }}"/preview-dark.mp4 \
              "${{ matrix.case }}"/preview-light.mp4 \
+             "${{ matrix.case }}"/media.json \
              "artifact/${{ matrix.case }}/" 2>/dev/null || true
 
       - name: Upload media

@@ -10,44 +10,37 @@ import h5py
 import numpy as np
 
 
-def _frame_key(path: str):
-    """Natural-sort key: order by the trailing frame index in the file name.
+# What may follow "<prefix>_" in the name of a frame: an "init" snapshot, a
+# zero-padded index (gallery output, "_0007") or samurai's "ite_<n>" naming.
+# Anything else sharing the prefix is an auxiliary file: restart dumps
+# ("_restart_ite_7", "_restart_init"), diagnostics ("_diverged"), ... Their
+# HDF5 layout is not the explicit-mesh export the renderer reads.
+_FRAME_SUFFIX = re.compile(r"(?:init|(?:ite_)?(\d+))")
 
-    Handles zero-padded gallery output (``prefix_0007``) and samurai's
-    unpadded ``prefix_ite_7`` naming, and puts an ``_init`` snapshot first.
-    Only the number at the *end* of the name (after the extension is removed)
-    is used, so digits inside the prefix (``riemann2d``, ``config3``) or the
-    ``.h5`` extension do not corrupt the ordering.
-    """
+
+def _frame_index(path: str, prefix: str):
+    """Time index of a frame (-1 for the init snapshot), None if not a frame."""
     stem = os.path.splitext(os.path.basename(path))[0]
-    if stem.endswith("_init"):
-        return -1
-    m = re.search(r"_(\d+)$", stem)
-    return int(m.group(1)) if m else -1
-
-
-def _is_frame(path: str) -> bool:
-    """True for time-series frames, False for auxiliary dumps sharing the prefix.
-
-    Some solvers also write restart/diagnostic files under the same prefix
-    (``<prefix>_restart.h5``, ``<prefix>_diverged.h5``) whose HDF5 layout is not
-    the explicit-mesh export the renderer reads. A frame is either an ``_init``
-    snapshot or ends in a numeric index (``_0007``, ``_ite_00007``).
-    """
-    stem = os.path.splitext(os.path.basename(path))[0]
-    return stem.endswith("_init") or re.search(r"_(\d+)$", stem) is not None
+    if not stem.startswith(f"{prefix}_"):
+        return None
+    m = _FRAME_SUFFIX.fullmatch(stem[len(prefix) + 1 :])
+    if m is None:
+        return None
+    return -1 if m.group(1) is None else int(m.group(1))
 
 
 def list_frames(directory: str, prefix: str) -> list[str]:
     """Return the frame ``.h5`` files for a given prefix, in time order.
 
-    samurai writes one file per output step, e.g. ``<prefix>_<frame>.h5``.
+    samurai writes one file per output step, ``<prefix>_<frame>.h5`` or
+    ``<prefix>_ite_<frame>.h5``, plus an optional ``<prefix>_init.h5`` that
+    comes first. Other files sharing the prefix are ignored.
     """
     pattern = os.path.join(directory, f"{prefix}_*.h5")
-    files = sorted((p for p in glob.glob(pattern) if _is_frame(p)), key=_frame_key)
-    if not files:
+    indexed = [(i, p) for p in glob.glob(pattern) if (i := _frame_index(p, prefix)) is not None]
+    if not indexed:
         raise FileNotFoundError(f"no frames matching {pattern!r}")
-    return files
+    return [p for _, p in sorted(indexed)]
 
 
 def _mesh_group(f: h5py.File):
