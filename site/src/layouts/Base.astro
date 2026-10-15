@@ -1,13 +1,20 @@
 ---
-import "@fontsource-variable/newsreader";
+import "@fontsource-variable/archivo/wdth.css";
+import "@fontsource/martian-mono/400.css";
+import "@fontsource/martian-mono/500.css";
 import "../styles/global.css";
 import "katex/dist/katex.min.css";
 
 interface Props {
   title: string;
   description?: string;
+  current?: "wall";
 }
-const { title, description = "A gallery of adaptive-mesh simulations built with samurai." } = Astro.props;
+const {
+  title,
+  description = "A wall of adaptive-mesh simulations built with samurai.",
+  current,
+} = Astro.props;
 const base = import.meta.env.BASE_URL;
 const href = (p: string) => `${base.replace(/\/$/, "")}/${p.replace(/^\//, "")}`;
 ---
@@ -16,39 +23,40 @@ const href = (p: string) => `${base.replace(/\/$/, "")}/${p.replace(/^\//, "")}`
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="description" content={description} />
     <title>{title}</title>
     <!-- Set the theme before first paint to avoid a flash. Defaults to the
-         user's stored choice, else their OS preference, else dark. -->
+         user's stored choice, else their OS preference. -->
     <script is:inline>
       (function () {
+        var theme;
         try {
-          var stored = localStorage.getItem("theme");
-          var theme =
-            stored ||
-            (window.matchMedia("(prefers-color-scheme: light)").matches
-              ? "light"
-              : "dark");
-          document.documentElement.dataset.theme = theme;
-        } catch (e) {
-          document.documentElement.dataset.theme = "dark";
+          theme = localStorage.getItem("theme");
+        } catch (e) {}
+        if (theme !== "light" && theme !== "dark") {
+          theme = window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
         }
+        document.documentElement.dataset.theme = theme;
       })();
     </script>
   </head>
   <body>
-    <header class="site-header">
-      <div class="container inner">
-        <a class="brand" href={href("/")}>
-          <span class="mark"></span>
-          samurai <small>gallery</small>
-        </a>
-        <nav class="nav-links">
-          <a href={href("/")}>Cases</a>
-          <a href="https://github.com/hpc-maths/samurai" target="_blank" rel="noopener">samurai</a>
-          <a href="https://hpc-math-samurai.readthedocs.io" target="_blank" rel="noopener">Docs</a>
-          <button class="theme-toggle" id="theme-toggle" type="button" aria-label="Toggle light and dark theme" title="Toggle light / dark">
+    <a class="skip" href="#main">Skip to content</a>
+    <header class="top-bezel">
+      <div class="room">
+        <a class="wordmark" href={href("/")}>samurai <span class="etch">gallery</span></a>
+        <nav class="top-nav" aria-label="Main">
+          <a href={href("/")} aria-current={current === "wall" ? "page" : undefined}>Cases</a>
+          <a class="ext" href="https://github.com/hpc-maths/samurai" target="_blank" rel="noopener">
+            Source
+            <svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M5 11 11 5M6 5h5v5"></path></svg>
+          </a>
+          <a class="ext" href="https://hpc-math-samurai.readthedocs.io" target="_blank" rel="noopener">
+            Docs
+            <svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M5 11 11 5M6 5h5v5"></path></svg>
+          </a>
+          <button class="theme-toggle" id="theme-toggle" type="button" aria-label="Switch between light and dark theme">
             <svg class="to-light" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
               <circle cx="12" cy="12" r="4"></circle>
               <path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"></path>
@@ -61,46 +69,46 @@ const href = (p: string) => `${base.replace(/\/$/, "")}/${p.replace(/^\//, "")}`
       </div>
     </header>
 
-    <main>
+    <main id="main">
       <slot />
     </main>
 
-    <footer class="site-footer">
-      <div class="container inner">
-        <span>Built with <a href="https://github.com/hpc-maths/samurai">samurai</a> · adaptive mesh refinement &amp; multiresolution.</span>
-        <span>Contribute a case: open a pull request.</span>
+    <footer class="bottom-bezel">
+      <div class="room">
+        <span>Every case rebuilds from its own folder with <a href="https://github.com/hpc-maths/samurai">samurai</a>.</span>
+        <span>Add a case: open a pull request on <a href="https://github.com/hpc-maths/samurai-gallery">samurai-gallery</a>.</span>
       </div>
     </footer>
 
     <script is:inline>
-      // Swap every theme-aware media element (cards + case video) to the
-      // variant matching the active theme.
+      // Point every theme-aware media element (screens, case video) at the
+      // variant of the active theme.
       function applyThemeMedia() {
         var light = document.documentElement.dataset.theme === "light";
-        document.querySelectorAll(".theme-media").forEach(function (el) {
+        document.querySelectorAll("[data-dark][data-light]").forEach(function (el) {
           var url = light ? el.dataset.light : el.dataset.dark;
-          if (!url) return;
+          if (!url || el.getAttribute("src") === url) return;
           if (el.tagName === "VIDEO") {
+            if (!el.hasAttribute("src") && !el.dataset.eager) return;
             var poster = light ? el.dataset.posterLight : el.dataset.posterDark;
-            if (el.getAttribute("src") !== url) {
-              el.src = url;
-              if (poster) el.poster = poster;
-              el.load();
+            var wasPlaying = !el.paused;
+            el.src = url;
+            if (poster) el.poster = poster;
+            if (wasPlaying || el.autoplay) {
               var p = el.play();
               if (p && p.catch) p.catch(function () {});
             }
-          } else if (el.getAttribute("src") !== url) {
-            el.style.display = "";
+          } else {
             el.src = url;
           }
         });
       }
+      window.applyThemeMedia = applyThemeMedia;
       applyThemeMedia();
       document.addEventListener("DOMContentLoaded", applyThemeMedia);
 
-      document.getElementById("theme-toggle")?.addEventListener("click", function () {
-        var cur = document.documentElement.dataset.theme === "light" ? "light" : "dark";
-        var next = cur === "light" ? "dark" : "light";
+      document.getElementById("theme-toggle").addEventListener("click", function () {
+        var next = document.documentElement.dataset.theme === "light" ? "dark" : "light";
         document.documentElement.dataset.theme = next;
         try {
           localStorage.setItem("theme", next);
