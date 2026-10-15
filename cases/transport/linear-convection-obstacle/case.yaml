@@ -1,5 +1,5 @@
 title: Linear convection around an obstacle
-summary: A square profile is carried diagonally past a solid obstacle, tracked by an adaptive mesh.
+summary: A square profile splits around a solid obstacle in a divergence-free flow, tracked by an adaptive mesh.
 authors:
   - The samurai team
 methods:
@@ -27,8 +27,8 @@ run:
   output_prefix: linear_convection_obstacle
   profiles:
     ci:
-      args: ["--Tf", "3.0", "--min-level", "2", "--max-level", "6"]
+      args: ["--Tf", "1.8", "--min-level", "2", "--max-level", "6"]
       nfiles: 60
     hero:
-      args: ["--Tf", "3.0", "--min-level", "2", "--max-level", "8"]
+      args: ["--Tf", "1.8", "--min-level", "2", "--max-level", "8"]
       nfiles: 120
