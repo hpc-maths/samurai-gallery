@@ -9,6 +9,7 @@ build/
 cases/**/thumbnail*.png
 cases/**/preview*.mp4
 cases/**/*.gif
+cases/**/media.json
 
 # Python
 __pycache__/

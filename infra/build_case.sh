@@ -68,7 +68,7 @@ echo ">> profile: $PROFILE (env: $ENV)"
 # Escape hatches: GALLERY_NO_CACHE=1 bypasses the cache entirely;
 # GALLERY_CACHE_REFRESH=1 forces a rebuild but still repopulates the store.
 CACHE_DIR="${GALLERY_CACHE_DIR:-$ROOT/.cache/media}"
-MEDIA_FILES=(thumbnail-dark.png thumbnail-light.png preview-dark.mp4 preview-light.mp4)
+MEDIA_FILES=(thumbnail-dark.png thumbnail-light.png preview-dark.mp4 preview-light.mp4 media.json)
 
 entry_complete() {
     local entry="$1"

@@ -15,17 +15,21 @@ ones). Fine cells get thin joints and coarse cells thick ones, so the mesh stays
 readable at every refinement level without graying out the field.
 
 1D series are line plots whose axes follow the theme.
+
+Each render also writes media.json, which the site reads to draw the color
+legend and the mesh statistics next to the media.
 """
 
 from __future__ import annotations
 
+import importlib
+import json
 import shutil
 
 import matplotlib
 
 matplotlib.use("Agg")
 
-import cmcrameri.cm  # noqa: F401  (registers the cmc.* colormaps)
 import matplotlib.animation
 import matplotlib.pyplot as plt
 import numpy as np
@@ -33,6 +37,9 @@ from matplotlib.collections import PolyCollection
 from matplotlib.colors import Colormap, ListedColormap, Normalize, TwoSlopeNorm
 
 from .h5 import list_frames, read_frame_1d, read_frame_2d
+
+# Importing cmcrameri registers the cmc.* colormaps with matplotlib.
+importlib.import_module("cmcrameri.cm")
 
 THEMES = ("dark", "light")
 
@@ -211,6 +218,29 @@ def _cell_collection(polys, values, cmap, norm, show_grid, px_per_unit, dpi):
     return PolyCollection(polys, facecolors=faces, edgecolors=joints, linewidths=widths)
 
 
+MEDIA_META = "media.json"
+_LEGEND_STOPS = 11
+
+
+def _mesh_stats(polys):
+    """Number of distinct cell sizes (refinement levels) and of cells in a frame."""
+    widths = polys[:, :, 0].max(axis=1) - polys[:, :, 0].min(axis=1)
+    levels = np.unique(np.round(np.log2(widths.max() / widths)).astype(int))
+    return {"levels": int(levels.size), "cells": int(widths.size)}
+
+
+def _write_meta(meta):
+    with open(MEDIA_META, "w") as f:
+        json.dump(meta, f, indent=2)
+        f.write("\n")
+
+
+def _legend(cmap, norm, vmin, vmax):
+    """Colormap stops evenly spaced in value, as hex, for the site legend."""
+    values = np.linspace(vmin, vmax, _LEGEND_STOPS)
+    return [matplotlib.colors.to_hex(c) for c in cmap(norm(values))]
+
+
 def render_series_2d(
     directory: str,
     prefix: str,
@@ -256,6 +286,18 @@ def render_series_2d(
             polys, values = read_frame_2d(files[thumb_index], field, component)
             ax.add_collection(_cell_collection(polys, values, colormap, norm, show_grid, px_per_unit, dpi))
             fig.savefig("thumbnail-dark.png", dpi=dpi)
+            _write_meta(
+                {
+                    "dimension": 2,
+                    "field": field,
+                    "range": [vmin, vmax],
+                    "diverging": bool(diverging),
+                    "legend": _legend(colormap, norm, vmin, vmax),
+                    "aspect": float((xmax - xmin) / (ymax - ymin)),
+                    "frames": len(files),
+                    "mesh": _mesh_stats(polys),
+                }
+            )
         else:
             writer = _writer(fps)
             with writer.saving(fig, "preview-dark.mp4", dpi=dpi):
@@ -339,6 +381,18 @@ def render_series_1d(
     extent = (xmin, xmax, ymin - pad, ymax + pad)
     thumb_index = len(files) // 2
     color = _resolve_cmap(None, diverging=False)(0.62)
+    x, _ = read_frame_1d(files[thumb_index], field)
+    spacing = np.diff(x)
+    levels = np.unique(np.round(np.log2(spacing.max() / spacing)).astype(int))
+    _write_meta(
+        {
+            "dimension": 1,
+            "field": field,
+            "range": [float(ymin), float(ymax)],
+            "frames": len(files),
+            "mesh": {"levels": int(levels.size), "cells": int(x.size)},
+        }
+    )
 
     for theme in THEMES:
         _render_1d_variant(
