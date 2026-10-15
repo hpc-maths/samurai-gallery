@@ -88,10 +88,17 @@ its `conda/environment.yml` if missing, and builds `run.target`:
 ```yaml
 engine:
   repo: hpc-maths/samurai-euler   # git repository
-  ref: main                       # tested ref
+  ref: 700f37a98ada02d5aa00331683e44da6fe4d9fd9  # tested commit
   env: samurai-euler-env          # conda env (provides samurai for this case)
   code_file: scenario.hpp         # source shown on the site
 ```
+
+Pin `ref` to a commit, not a branch. `code_file` is a copy of the engine's
+scenario, so it only matches what runs at the commit it was copied from. On a
+branch, the engine can rename the test case, change its options or fix its
+constants, and the case breaks or shows code that no longer runs. To move a
+case to a newer engine, update `ref`, the copied `code_file` and the `args`
+together.
 
 ## Conventions for `main.cpp`
 

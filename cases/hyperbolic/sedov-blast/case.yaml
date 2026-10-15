@@ -26,7 +26,9 @@ media:
   hero: preview.mp4
 engine:
   repo: hpc-maths/samurai-euler
-  ref: main
+  # The commit the displayed scenario.hpp was copied from. A branch would let
+  # the engine change under the case (test cases renamed, constants fixed).
+  ref: 700f37a98ada02d5aa00331683e44da6fe4d9fd9
   env: samurai-euler-env
   code_file: scenario.hpp
 run:
