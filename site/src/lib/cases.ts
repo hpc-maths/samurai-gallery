@@ -11,6 +11,21 @@ export interface Reference {
   url: string;
 }
 
+/** Render metadata written by galleria next to the media (media.json). */
+export interface MediaMeta {
+  dimension: number;
+  field: string;
+  /** color range [min, max] (2D) or value range (1D) */
+  range: [number, number];
+  diverging?: boolean;
+  /** colormap stops evenly spaced in value, hex (2D only) */
+  legend?: string[];
+  /** domain width / height (2D only) */
+  aspect?: number;
+  frames: number;
+  mesh: { levels: number; cells: number };
+}
+
 export interface CaseProfile {
   args: string[];
   nfiles: number;
@@ -50,10 +65,22 @@ export interface GalleryCase {
   thumbnailLightUrl: string;
   heroDarkUrl: string;
   heroLightUrl: string;
+  /** render metadata, null when the media have not been generated */
+  media: MediaMeta | null;
 }
 
 function readIfExists(p: string): string {
   return fs.existsSync(p) ? fs.readFileSync(p, "utf-8") : "";
+}
+
+function readMedia(dir: string): MediaMeta | null {
+  const raw = readIfExists(path.join(dir, "media.json"));
+  if (!raw) return null;
+  try {
+    return JSON.parse(raw) as MediaMeta;
+  } catch {
+    return null;
+  }
 }
 
 export function getCases(): GalleryCase[] {
@@ -108,6 +135,7 @@ export function getCases(): GalleryCase[] {
         thumbnailLightUrl: `${mediaBase}/thumbnail-light.png`,
         heroDarkUrl: `${mediaBase}/preview-dark.mp4`,
         heroLightUrl: `${mediaBase}/preview-light.mp4`,
+        media: readMedia(dir),
       });
     }
   }
@@ -135,6 +163,95 @@ export const ADAPTATION_LABELS: Record<string, string> = {
   uniform: "Uniform",
   none: "No adaptation",
 };
+
+export const DIFFICULTY_LABELS: Record<string, string> = {
+  beginner: "Beginner",
+  intermediate: "Intermediate",
+  advanced: "Advanced",
+};
+
+/** Tags that are acronyms or scheme names rather than words. */
+export const TAG_LABELS: Record<string, string> = {
+  hllc: "HLLC",
+  weno5: "WENO5",
+  "mesh-adaptation": "Mesh adaptation",
+};
+
+export const REQUIRES_LABELS: Record<string, string> = {
+  mpi: "MPI",
+  petsc: "PETSc",
+  openmp: "OpenMP",
+  cgal: "CGAL",
+};
+
+/**
+ * Methods the gallery is built to show but has no case for yet. They appear on
+ * the wall as screens on standby (the README lists them on the roadmap).
+ */
+export const ROADMAP_METHODS = ["lattice-boltzmann", "finite-difference"];
+
+/** Typographic name of a field written by a solver (rho, phi, alpha_l...). */
+export function fieldSymbol(field: string): string {
+  const greek: Record<string, string> = {
+    rho: "ρ",
+    phi: "φ",
+    alpha: "α",
+    psi: "ψ",
+    omega: "ω",
+    theta: "θ",
+  };
+  const [head, ...rest] = field.split("_");
+  const sym = greek[head] ?? head;
+  return rest.length ? `${sym}_${rest.join("_")}` : sym;
+}
+
+/** A facet of the wall's console: one case.yaml field, its values and labels. */
+export interface Facet {
+  key: string;
+  label: string;
+  values: { value: string; label: string; count: number }[];
+}
+
+function facetOf(
+  cases: GalleryCase[],
+  key: string,
+  label: string,
+  pick: (c: GalleryCase) => string[],
+  labels: Record<string, string> = {},
+): Facet {
+  const counts = new Map<string, number>();
+  for (const c of cases) for (const v of pick(c)) counts.set(v, (counts.get(v) ?? 0) + 1);
+  const values = [...counts.entries()]
+    .map(([value, count]) => ({ value, label: labels[value] ?? titleize(value), count }))
+    .sort((a, b) => b.count - a.count || a.label.localeCompare(b.label));
+  return { key, label, values };
+}
+
+/** The facets of the console, built from every case's metadata. */
+export function getFacets(cases: GalleryCase[]): Facet[] {
+  return [
+    facetOf(cases, "equation", "Equation", (c) => [c.equation]),
+    facetOf(cases, "method", "Method", (c) => c.methods, METHOD_LABELS),
+    facetOf(cases, "dimension", "Dimension", (c) => [`${c.dimension}d`], { "1d": "1D", "2d": "2D", "3d": "3D" }),
+    facetOf(cases, "mesh", "Mesh", (c) => [c.adaptation], ADAPTATION_LABELS),
+    facetOf(cases, "level", "Level", (c) => [c.difficulty], DIFFICULTY_LABELS),
+    facetOf(cases, "requires", "Requires", (c) => c.requires, REQUIRES_LABELS),
+    facetOf(cases, "tag", "Tags", (c) => c.tags, TAG_LABELS),
+  ].filter((f) => f.values.length > 0);
+}
+
+/** Facet values of one case, as written in the wall's data attributes. */
+export function facetValues(c: GalleryCase): Record<string, string[]> {
+  return {
+    equation: [c.equation],
+    method: c.methods,
+    dimension: [`${c.dimension}d`],
+    mesh: [c.adaptation],
+    level: [c.difficulty],
+    requires: c.requires,
+    tag: c.tags,
+  };
+}
 
 export function titleize(slug: string): string {
   return slug.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());

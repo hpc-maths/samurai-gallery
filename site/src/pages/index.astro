@@ -1,99 +1,436 @@
 ---
 import Base from "../layouts/Base.astro";
-import CaseCard from "../components/CaseCard.astro";
-import { getCases, METHOD_LABELS, ADAPTATION_LABELS } from "../lib/cases";
+import Screen from "../components/Screen.astro";
+import { getCases, getFacets, METHOD_LABELS, ROADMAP_METHODS } from "../lib/cases";
 
 const cases = getCases();
-const methods = [...new Set(cases.flatMap((c) => c.methods))].sort();
-const dimensions = [...new Set(cases.map((c) => c.dimension))].sort();
-const adaptations = [...new Set(cases.map((c) => c.adaptation))].sort();
+// Spread the featured cases through the wall: one large screen, then a block
+// of regular ones, so the first band mixes scales instead of lining up
+// identical large screens.
+const featured = cases.filter((c) => c.featured);
+const regular = cases.filter((c) => !c.featured);
+const wall: typeof cases = [];
+while (featured.length || regular.length) {
+  if (featured.length) wall.push(featured.shift()!);
+  wall.push(...regular.splice(0, 4));
+}
+const facets = getFacets(cases);
+const methodsShown = new Set(cases.flatMap((c) => c.methods));
+const standby = ROADMAP_METHODS.filter((m) => !methodsShown.has(m));
+// A facet with many values gets a filter field in its menu.
+const SEARCHABLE_FACET = 10;
 ---
 
-<Base title="samurai gallery">
-  <section class="masthead">
-    <div class="container">
-      <div class="label kicker">Adaptive mesh refinement · multiresolution</div>
-      <h1>Finite-volume simulations that refine themselves.</h1>
+<Base title="samurai gallery" current="wall">
+  <section class="room thesis">
+    <h1>Adaptive meshes that follow the physics</h1>
+    <div>
       <p>
-        A community catalogue of simulation cases built with samurai. Each entry
-        is reproducible from a single folder: the code, the equations, and the
-        run that produced the image.
+        Simulations built with samurai, the C++ library for adaptive mesh refinement and
+        multiresolution. Each screen shows the solution and the mesh that resolves it, cell by
+        cell, and every case rebuilds from a single folder.
       </p>
-      <div class="actions">
-        <a href="https://github.com/hpc-maths/samurai" target="_blank" rel="noopener">Get samurai ↗</a>
-        <a href="https://hpc-math-samurai.readthedocs.io" target="_blank" rel="noopener">Documentation ↗</a>
+      <div class="links">
+        <a href="https://github.com/hpc-maths/samurai" target="_blank" rel="noopener">
+          Get samurai
+          <svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M5 11 11 5M6 5h5v5"></path></svg>
+        </a>
+        <a href="https://hpc-math-samurai.readthedocs.io" target="_blank" rel="noopener">
+          Read the documentation
+          <svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M5 11 11 5M6 5h5v5"></path></svg>
+        </a>
       </div>
     </div>
   </section>
 
-  <div class="container">
-    <div class="catalog-bar" id="filters">
-      <span class="count" id="count">{cases.length} cases</span>
-      <div class="filter-group">
-        <span class="group-label">Method</span>
-        {methods.map((m) => (
-          <button class="chip" data-group="methods" data-value={m} aria-pressed="false">{METHOD_LABELS[m] ?? m}</button>
-        ))}
-      </div>
-      <div class="filter-group">
-        <span class="group-label">Dim</span>
-        {dimensions.map((d) => (
-          <button class="chip" data-group="dimension" data-value={`d${d}`} aria-pressed="false">{d}D</button>
-        ))}
-      </div>
-      <div class="filter-group">
-        <span class="group-label">Mesh</span>
-        {adaptations.map((a) => (
-          <button class="chip" data-group="adaptation" data-value={a} aria-pressed="false">{ADAPTATION_LABELS[a] ?? a}</button>
-        ))}
-      </div>
-    </div>
+  <div class="console" id="console">
+    <div class="room">
+      <div class="console-row">
+        <label class="search">
+          <span class="visually-hidden">Search cases</span>
+          <svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="7" cy="7" r="4.5"></circle><path d="m10.5 10.5 3.5 3.5"></path></svg>
+          <input id="q" type="search" placeholder="Search: equation, scheme, tag…" autocomplete="off" spellcheck="false" />
+        </label>
 
-    <div class="grid" id="grid">
-      {cases.map((item, i) => <CaseCard item={item} index={i + 1} />)}
-      <p class="empty" id="empty" hidden>No case matches these filters.</p>
+        <div class="facets" id="facets">
+          {facets.map((f) => (
+            <div class="facet" data-facet={f.key}>
+              <button class="facet-button" type="button" aria-expanded="false" aria-controls={`panel-${f.key}`} data-active="false">
+                {f.label}
+                <span class="n" data-selected-count></span>
+                <svg class="icon" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="m3 4.5 3 3 3-3"></path></svg>
+              </button>
+              <div class="facet-panel" id={`panel-${f.key}`} role="group" aria-label={f.label} hidden>
+                {f.values.length > SEARCHABLE_FACET && (
+                  <input type="search" placeholder={`Filter ${f.label.toLowerCase()}…`} aria-label={`Filter ${f.label.toLowerCase()}`} data-panel-filter />
+                )}
+                {f.values.map((v) => (
+                  <label class="option" data-label={v.label.toLowerCase()}>
+                    <input type="checkbox" value={v.value} />
+                    <span>{v.label}</span>
+                    <span class="n" data-count>{v.count}</span>
+                  </label>
+                ))}
+                {f.key === "method" &&
+                  standby.map((m) => (
+                    <div class="option roadmap">
+                      <span>{METHOD_LABELS[m] ?? m}</span>
+                      <span class="n">roadmap</span>
+                    </div>
+                  ))}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div class="transport">
+          <button class="console-button" id="run" type="button" aria-pressed="false" aria-label="Run every visible simulation">
+            <svg class="icon play" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M4 2.5v11l9-5.5z"></path></svg>
+            <svg class="icon pause" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true" style="display:none"><path d="M3.5 2.5h3v11h-3zM9.5 2.5h3v11h-3z"></path></svg>
+          </button>
+          <label class="scrub">
+            <span class="visually-hidden">Simulation time, all screens</span>
+            <input id="scrub" type="range" min="0" max="1000" value="0" />
+            <output class="etch" id="scrub-out" for="scrub">t/T 0.00</output>
+          </label>
+        </div>
+
+        <span class="count etch" id="count" aria-live="polite">{cases.length} screens</span>
+      </div>
+      <div class="active-row" id="active" hidden></div>
+    </div>
+  </div>
+
+  <div class="room wall-frame">
+    <div class="wall" id="wall">
+      {wall.map((item, i) => <Screen item={item} eager={i < 8} />)}
+      {standby.map((m) => (
+        <div class="screen standby" data-standby>
+          <div class="glass"><span class="etch">Standby</span></div>
+          <div class="plate">
+            <span class="title">{METHOD_LABELS[m] ?? m}</span>
+            <span class="etch">On the samurai roadmap</span>
+          </div>
+        </div>
+      ))}
+      <div class="wall-empty" id="empty" hidden>
+        <p>No case matches this search.</p>
+        <button class="clear" type="button" data-clear>Clear search and filters</button>
+      </div>
     </div>
   </div>
 
   <script>
-    const filters = document.getElementById("filters")!;
-    const cards = [...document.querySelectorAll<HTMLElement>("#grid .card")];
+    // ---------------------------------------------------------------------
+    // Console: text search + facets (OR inside a facet, AND across facets),
+    // live counts, removable chips, state mirrored in the URL.
+    // ---------------------------------------------------------------------
+    const screens = [...document.querySelectorAll<HTMLElement>("#wall .screen:not(.standby)")];
+    const standbys = [...document.querySelectorAll<HTMLElement>("#wall [data-standby]")];
+    const facetEls = [...document.querySelectorAll<HTMLElement>("#facets .facet")];
+    const q = document.getElementById("q") as HTMLInputElement;
+    const countEl = document.getElementById("count")!;
+    const activeRow = document.getElementById("active")!;
     const empty = document.getElementById("empty")!;
-    const count = document.getElementById("count")!;
-    const total = cards.length;
+    const total = screens.length;
 
-    const active: Record<string, Set<string>> = {
-      methods: new Set(),
-      dimension: new Set(),
-      adaptation: new Set(),
-    };
+    type Facets = Record<string, string[]>;
+    const data = new Map<HTMLElement, { facets: Facets; text: string }>(
+      screens.map((s) => [s, { facets: JSON.parse(s.dataset.facets || "{}"), text: s.dataset.search || "" }]),
+    );
+    const selected: Record<string, Set<string>> = {};
+    const labels: Record<string, Map<string, string>> = {};
+    for (const f of facetEls) {
+      const key = f.dataset.facet!;
+      selected[key] = new Set();
+      labels[key] = new Map(
+        [...f.querySelectorAll<HTMLInputElement>("input[type=checkbox]")].map((i) => [
+          i.value,
+          i.closest("label")!.querySelector("span")!.textContent || i.value,
+        ]),
+      );
+    }
+    const facetNames: Record<string, string> = Object.fromEntries(
+      facetEls.map((f) => [f.dataset.facet!, f.querySelector(".facet-button")!.firstChild!.textContent!.trim()]),
+    );
+
+    function matchesText(text: string, query: string) {
+      return query.split(/\s+/).filter(Boolean).every((w) => text.includes(w));
+    }
+    function matches(s: HTMLElement, skip?: string) {
+      const d = data.get(s)!;
+      if (!matchesText(d.text, q.value.toLowerCase())) return false;
+      for (const [key, values] of Object.entries(selected)) {
+        if (key === skip || values.size === 0) continue;
+        if (!(d.facets[key] || []).some((v) => values.has(v))) return false;
+      }
+      return true;
+    }
+
+    function syncUrl() {
+      const params = new URLSearchParams();
+      if (q.value.trim()) params.set("q", q.value.trim());
+      for (const [key, values] of Object.entries(selected)) if (values.size) params.set(key, [...values].join(","));
+      const qs = params.toString();
+      history.replaceState(null, "", qs ? `?${qs}` : location.pathname);
+    }
+
+    function renderChips() {
+      activeRow.replaceChildren();
+      let n = 0;
+      for (const [key, values] of Object.entries(selected)) {
+        for (const v of values) {
+          n++;
+          const chip = document.createElement("button");
+          chip.type = "button";
+          chip.className = "chip";
+          chip.setAttribute("aria-label", `Remove filter ${facetNames[key]}: ${labels[key].get(v)}`);
+          chip.innerHTML = `<span class="k"></span><span class="v"></span><svg class="icon" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="m3 3 6 6M9 3 3 9"/></svg>`;
+          chip.querySelector(".k")!.textContent = facetNames[key];
+          chip.querySelector(".v")!.textContent = labels[key].get(v) || v;
+          chip.addEventListener("click", () => {
+            selected[key].delete(v);
+            const box = document.querySelector<HTMLInputElement>(`.facet[data-facet="${key}"] input[value="${CSS.escape(v)}"]`);
+            if (box) box.checked = false;
+            apply();
+          });
+          activeRow.append(chip);
+        }
+      }
+      if (n > 0) {
+        const clear = document.createElement("button");
+        clear.type = "button";
+        clear.className = "clear";
+        clear.textContent = "Clear all";
+        clear.dataset.clear = "";
+        activeRow.append(clear);
+      }
+      activeRow.hidden = n === 0;
+    }
 
     function apply() {
       let visible = 0;
-      for (const card of cards) {
-        const ok = Object.entries(active).every(([group, values]) => {
-          if (values.size === 0) return true;
-          const attr = card.dataset[group] ?? "";
-          const cardValues = attr.split(" ").filter(Boolean);
-          return [...values].some((v) => cardValues.includes(v));
-        });
-        card.style.display = ok ? "" : "none";
+      for (const s of screens) {
+        const ok = matches(s);
+        s.hidden = !ok;
         if (ok) visible++;
       }
+      const filtering = q.value.trim() !== "" || Object.values(selected).some((v) => v.size);
+      for (const s of standbys) s.hidden = filtering;
       empty.hidden = visible !== 0;
-      count.textContent = visible === total ? `${total} cases` : `${visible} / ${total} cases`;
+      countEl.textContent = visible === total ? `${total} screens` : `${visible} of ${total} screens`;
+
+      // Each option counts the screens it would show, given the other facets.
+      for (const f of facetEls) {
+        const key = f.dataset.facet!;
+        const pool = screens.filter((s) => matches(s, key));
+        for (const label of f.querySelectorAll<HTMLElement>("label.option")) {
+          const box = label.querySelector("input")!;
+          const n = pool.filter((s) => (data.get(s)!.facets[key] || []).includes(box.value)).length;
+          label.querySelector("[data-count]")!.textContent = String(n);
+          label.dataset.empty = String(n === 0 && !box.checked);
+        }
+        const button = f.querySelector<HTMLElement>(".facet-button")!;
+        const k = selected[key].size;
+        button.dataset.active = String(k > 0);
+        button.querySelector("[data-selected-count]")!.textContent = k ? String(k) : "";
+      }
+      renderChips();
+      syncUrl();
+      document.dispatchEvent(new CustomEvent("wall:filtered"));
     }
 
-    filters.addEventListener("click", (e) => {
-      const chip = (e.target as HTMLElement).closest<HTMLElement>(".chip");
-      if (!chip) return;
-      const group = chip.dataset.group!;
-      const value = chip.dataset.value!;
-      const pressed = chip.getAttribute("aria-pressed") === "true";
-      chip.setAttribute("aria-pressed", String(!pressed));
-      if (pressed) active[group].delete(value);
-      else active[group].add(value);
-      apply();
+    // Facet menus
+    function closePanels(except?: Element) {
+      for (const f of facetEls) {
+        if (f === except) continue;
+        f.querySelector(".facet-button")!.setAttribute("aria-expanded", "false");
+        (f.querySelector(".facet-panel") as HTMLElement).hidden = true;
+      }
+    }
+    for (const f of facetEls) {
+      const key = f.dataset.facet!;
+      const button = f.querySelector<HTMLButtonElement>(".facet-button")!;
+      const panel = f.querySelector<HTMLElement>(".facet-panel")!;
+      button.addEventListener("click", () => {
+        const open = button.getAttribute("aria-expanded") === "true";
+        closePanels(f);
+        button.setAttribute("aria-expanded", String(!open));
+        panel.hidden = open;
+        if (!open) (panel.querySelector("input") as HTMLElement | null)?.focus();
+      });
+      panel.addEventListener("change", (e) => {
+        const box = e.target as HTMLInputElement;
+        if (box.type !== "checkbox") return;
+        if (box.checked) selected[key].add(box.value);
+        else selected[key].delete(box.value);
+        apply();
+      });
+      panel.querySelector<HTMLInputElement>("[data-panel-filter]")?.addEventListener("input", (e) => {
+        const term = (e.target as HTMLInputElement).value.toLowerCase();
+        for (const o of panel.querySelectorAll<HTMLElement>("label.option")) o.hidden = !o.dataset.label!.includes(term);
+      });
+    }
+    document.addEventListener("click", (e) => {
+      const target = e.target as HTMLElement;
+      if (!target.closest(".facet")) closePanels();
+      if (target.closest("[data-clear]")) {
+        q.value = "";
+        for (const v of Object.values(selected)) v.clear();
+        for (const box of document.querySelectorAll<HTMLInputElement>("#facets input[type=checkbox]")) box.checked = false;
+        apply();
+      }
     });
+    document.addEventListener("keydown", (e) => {
+      if (e.key !== "Escape") return;
+      const open = facetEls.find((f) => f.querySelector('[aria-expanded="true"]'));
+      if (open) {
+        closePanels();
+        open.querySelector<HTMLElement>(".facet-button")!.focus();
+      }
+    });
+    q.addEventListener("input", apply);
+
+    // Restore the state from the URL.
+    const params = new URLSearchParams(location.search);
+    q.value = params.get("q") || "";
+    for (const key of Object.keys(selected)) {
+      for (const v of (params.get(key) || "").split(",").filter(Boolean)) {
+        const box = document.querySelector<HTMLInputElement>(`.facet[data-facet="${key}"] input[value="${CSS.escape(v)}"]`);
+        if (!box) continue;
+        box.checked = true;
+        selected[key].add(v);
+      }
+    }
+    apply();
+
+    // ---------------------------------------------------------------------
+    // Transport: one clock drives every visible screen. Every preview is
+    // rendered to the same length, so t/T is shared across simulations.
+    // ---------------------------------------------------------------------
+    const PREVIEW_SECONDS = 12;
+    const runButton = document.getElementById("run") as HTMLButtonElement;
+    const scrub = document.getElementById("scrub") as HTMLInputElement;
+    const scrubOut = document.getElementById("scrub-out")!;
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const inView = new Set<HTMLElement>();
+    let t = 0;
+    let running = false;
+    let engaged = false; // the wall shows videos instead of thumbnails
+    let last = 0;
+
+    function videoOf(s: HTMLElement) {
+      return s.querySelector<HTMLVideoElement>("video");
+    }
+    function load(v: HTMLVideoElement) {
+      if (v.hasAttribute("src")) return;
+      const light = document.documentElement.dataset.theme === "light";
+      v.preload = "auto";
+      v.src = (light ? v.dataset.light : v.dataset.dark) || "";
+    }
+    function whenReady(v: HTMLVideoElement, fn: () => void) {
+      if (v.readyState >= 1) fn();
+      else v.addEventListener("loadedmetadata", fn, { once: true });
+    }
+    function liveScreens() {
+      return [...inView].filter((s) => !s.hidden && videoOf(s));
+    }
+    function show(s: HTMLElement) {
+      const v = videoOf(s);
+      if (!v) return;
+      load(v);
+      whenReady(v, () => {
+        v.currentTime = t * v.duration;
+        v.playbackRate = v.duration / PREVIEW_SECONDS;
+        v.classList.add("live");
+        if (running) v.play().catch(() => {});
+        else v.pause();
+      });
+    }
+    function setT(next: number) {
+      t = next;
+      scrub.value = String(Math.round(t * 1000));
+      scrubOut.textContent = `t/T ${t.toFixed(2)}`;
+    }
+    function tick(now: number) {
+      if (!running) return;
+      const dt = (now - last) / 1000;
+      last = now;
+      let next = t + dt / PREVIEW_SECONDS;
+      if (next >= 1) {
+        next = 0;
+        for (const s of liveScreens()) {
+          const v = videoOf(s)!;
+          if (v.readyState >= 1) v.currentTime = 0;
+        }
+      }
+      setT(next);
+      requestAnimationFrame(tick);
+    }
+    function setRunning(on: boolean) {
+      running = on;
+      engaged = engaged || on;
+      runButton.setAttribute("aria-pressed", String(on));
+      runButton.setAttribute("aria-label", on ? "Pause every simulation" : "Run every visible simulation");
+      (runButton.querySelector(".play") as SVGElement).style.display = on ? "none" : "";
+      (runButton.querySelector(".pause") as SVGElement).style.display = on ? "" : "none";
+      for (const s of liveScreens()) show(s);
+      if (on) {
+        last = performance.now();
+        requestAnimationFrame(tick);
+      }
+    }
+    runButton.addEventListener("click", () => setRunning(!running));
+    let seekQueued = false;
+    scrub.addEventListener("input", () => {
+      if (running) setRunning(false);
+      engaged = true;
+      setT(Number(scrub.value) / 1000);
+      if (seekQueued) return;
+      seekQueued = true;
+      requestAnimationFrame(() => {
+        seekQueued = false;
+        for (const s of liveScreens()) show(s);
+      });
+    });
+
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) {
+          const s = e.target as HTMLElement;
+          if (e.isIntersecting) {
+            inView.add(s);
+            if (engaged) show(s);
+          } else {
+            inView.delete(s);
+            videoOf(s)?.pause();
+          }
+        }
+      },
+      { rootMargin: "100px 0px" },
+    );
+    for (const s of screens) io.observe(s);
+    document.addEventListener("wall:filtered", () => {
+      if (engaged) for (const s of liveScreens()) show(s);
+    });
+
+    // Hovering a screen previews it while the wall clock is idle.
+    if (!reduceMotion) {
+      for (const s of screens) {
+        const v = videoOf(s);
+        if (!v) continue;
+        s.addEventListener("pointerenter", () => {
+          if (engaged) return;
+          load(v);
+          v.currentTime = 0;
+          v.play().then(() => v.classList.add("live")).catch(() => {});
+        });
+        s.addEventListener("pointerleave", () => {
+          if (engaged) return;
+          v.pause();
+          v.classList.remove("live");
+        });
+      }
+    }
   </script>
 </Base>

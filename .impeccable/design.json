@@ -1,0 +1,565 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-15T13:59:37+00:00",
+  "title": "Design System: samurai gallery",
+  "extensions": {
+    "colorMeta": {
+      "signal": {
+        "role": "primary",
+        "displayName": "Lipari Coral",
+        "canonical": "oklch(49.6% 0.140 33.8)",
+        "tonalRamp": [
+          "oklch(15% 0.140 33.8)",
+          "oklch(26% 0.140 33.8)",
+          "oklch(37% 0.140 33.8)",
+          "oklch(48% 0.140 33.8)",
+          "oklch(60% 0.140 33.8)",
+          "oklch(71% 0.140 33.8)",
+          "oklch(83% 0.140 33.8)",
+          "oklch(95% 0.140 33.8)"
+        ]
+      },
+      "signal-graphite": {
+        "role": "primary",
+        "displayName": "Lipari Coral (graphite)",
+        "canonical": "oklch(71.7% 0.146 35.8)",
+        "tonalRamp": [
+          "oklch(15% 0.146 35.8)",
+          "oklch(26% 0.146 35.8)",
+          "oklch(37% 0.146 35.8)",
+          "oklch(48% 0.146 35.8)",
+          "oklch(60% 0.146 35.8)",
+          "oklch(71% 0.146 35.8)",
+          "oklch(83% 0.146 35.8)",
+          "oklch(95% 0.146 35.8)"
+        ]
+      },
+      "on-signal": {
+        "role": "primary",
+        "displayName": "On Coral",
+        "canonical": "oklch(97.0% 0.003 264.5)",
+        "tonalRamp": [
+          "oklch(15% 0.003 264.5)",
+          "oklch(26% 0.003 264.5)",
+          "oklch(37% 0.003 264.5)",
+          "oklch(48% 0.003 264.5)",
+          "oklch(60% 0.003 264.5)",
+          "oklch(71% 0.003 264.5)",
+          "oklch(83% 0.003 264.5)",
+          "oklch(95% 0.003 264.5)"
+        ]
+      },
+      "on-signal-graphite": {
+        "role": "primary",
+        "displayName": "On Coral (graphite)",
+        "canonical": "oklch(15.4% 0.005 264.4)",
+        "tonalRamp": [
+          "oklch(15% 0.005 264.4)",
+          "oklch(26% 0.005 264.4)",
+          "oklch(37% 0.005 264.4)",
+          "oklch(48% 0.005 264.4)",
+          "oklch(60% 0.005 264.4)",
+          "oklch(71% 0.005 264.4)",
+          "oklch(83% 0.005 264.4)",
+          "oklch(95% 0.005 264.4)"
+        ]
+      },
+      "room": {
+        "role": "neutral",
+        "displayName": "Daylight Room",
+        "canonical": "oklch(93.0% 0.005 258.3)",
+        "tonalRamp": [
+          "oklch(15% 0.005 258.3)",
+          "oklch(26% 0.005 258.3)",
+          "oklch(37% 0.005 258.3)",
+          "oklch(48% 0.005 258.3)",
+          "oklch(60% 0.005 258.3)",
+          "oklch(71% 0.005 258.3)",
+          "oklch(83% 0.005 258.3)",
+          "oklch(95% 0.005 258.3)"
+        ]
+      },
+      "room-graphite": {
+        "role": "neutral",
+        "displayName": "Graphite Room",
+        "canonical": "oklch(15.4% 0.005 264.4)",
+        "tonalRamp": [
+          "oklch(15% 0.005 264.4)",
+          "oklch(26% 0.005 264.4)",
+          "oklch(37% 0.005 264.4)",
+          "oklch(48% 0.005 264.4)",
+          "oklch(60% 0.005 264.4)",
+          "oklch(71% 0.005 264.4)",
+          "oklch(83% 0.005 264.4)",
+          "oklch(95% 0.005 264.4)"
+        ]
+      },
+      "bezel": {
+        "role": "neutral",
+        "displayName": "Bezel",
+        "canonical": "oklch(87.8% 0.008 253.9)",
+        "tonalRamp": [
+          "oklch(15% 0.008 253.9)",
+          "oklch(26% 0.008 253.9)",
+          "oklch(37% 0.008 253.9)",
+          "oklch(48% 0.008 253.9)",
+          "oklch(60% 0.008 253.9)",
+          "oklch(71% 0.008 253.9)",
+          "oklch(83% 0.008 253.9)",
+          "oklch(95% 0.008 253.9)"
+        ]
+      },
+      "bezel-graphite": {
+        "role": "neutral",
+        "displayName": "Bezel (graphite)",
+        "canonical": "oklch(20.9% 0.009 264.4)",
+        "tonalRamp": [
+          "oklch(15% 0.009 264.4)",
+          "oklch(26% 0.009 264.4)",
+          "oklch(37% 0.009 264.4)",
+          "oklch(48% 0.009 264.4)",
+          "oklch(60% 0.009 264.4)",
+          "oklch(71% 0.009 264.4)",
+          "oklch(83% 0.009 264.4)",
+          "oklch(95% 0.009 264.4)"
+        ]
+      },
+      "bezel-hi": {
+        "role": "neutral",
+        "displayName": "Bezel Highlight",
+        "canonical": "oklch(83.1% 0.011 256.7)",
+        "tonalRamp": [
+          "oklch(15% 0.011 256.7)",
+          "oklch(26% 0.011 256.7)",
+          "oklch(37% 0.011 256.7)",
+          "oklch(48% 0.011 256.7)",
+          "oklch(60% 0.011 256.7)",
+          "oklch(71% 0.011 256.7)",
+          "oklch(83% 0.011 256.7)",
+          "oklch(95% 0.011 256.7)"
+        ]
+      },
+      "bezel-hi-graphite": {
+        "role": "neutral",
+        "displayName": "Bezel Highlight (graphite)",
+        "canonical": "oklch(26.8% 0.012 264.4)",
+        "tonalRamp": [
+          "oklch(15% 0.012 264.4)",
+          "oklch(26% 0.012 264.4)",
+          "oklch(37% 0.012 264.4)",
+          "oklch(48% 0.012 264.4)",
+          "oklch(60% 0.012 264.4)",
+          "oklch(71% 0.012 264.4)",
+          "oklch(83% 0.012 264.4)",
+          "oklch(95% 0.012 264.4)"
+        ]
+      },
+      "screen-off": {
+        "role": "neutral",
+        "displayName": "Screen Off",
+        "canonical": "oklch(90.6% 0.006 255.5)",
+        "tonalRamp": [
+          "oklch(15% 0.006 255.5)",
+          "oklch(26% 0.006 255.5)",
+          "oklch(37% 0.006 255.5)",
+          "oklch(48% 0.006 255.5)",
+          "oklch(60% 0.006 255.5)",
+          "oklch(71% 0.006 255.5)",
+          "oklch(83% 0.006 255.5)",
+          "oklch(95% 0.006 255.5)"
+        ]
+      },
+      "screen-off-graphite": {
+        "role": "neutral",
+        "displayName": "Screen Off (graphite)",
+        "canonical": "oklch(18.1% 0.007 258.4)",
+        "tonalRamp": [
+          "oklch(15% 0.007 258.4)",
+          "oklch(26% 0.007 258.4)",
+          "oklch(37% 0.007 258.4)",
+          "oklch(48% 0.007 258.4)",
+          "oklch(60% 0.007 258.4)",
+          "oklch(71% 0.007 258.4)",
+          "oklch(83% 0.007 258.4)",
+          "oklch(95% 0.007 258.4)"
+        ]
+      },
+      "ink": {
+        "role": "neutral",
+        "displayName": "Ink",
+        "canonical": "oklch(19.1% 0.009 264.3)",
+        "tonalRamp": [
+          "oklch(15% 0.009 264.3)",
+          "oklch(26% 0.009 264.3)",
+          "oklch(37% 0.009 264.3)",
+          "oklch(48% 0.009 264.3)",
+          "oklch(60% 0.009 264.3)",
+          "oklch(71% 0.009 264.3)",
+          "oklch(83% 0.009 264.3)",
+          "oklch(95% 0.009 264.3)"
+        ]
+      },
+      "ink-graphite": {
+        "role": "neutral",
+        "displayName": "Ink (graphite)",
+        "canonical": "oklch(93.6% 0.005 258.3)",
+        "tonalRamp": [
+          "oklch(15% 0.005 258.3)",
+          "oklch(26% 0.005 258.3)",
+          "oklch(37% 0.005 258.3)",
+          "oklch(48% 0.005 258.3)",
+          "oklch(60% 0.005 258.3)",
+          "oklch(71% 0.005 258.3)",
+          "oklch(83% 0.005 258.3)",
+          "oklch(95% 0.005 258.3)"
+        ]
+      },
+      "ink-2": {
+        "role": "neutral",
+        "displayName": "Ink 2",
+        "canonical": "oklch(42.1% 0.019 257.3)",
+        "tonalRamp": [
+          "oklch(15% 0.019 257.3)",
+          "oklch(26% 0.019 257.3)",
+          "oklch(37% 0.019 257.3)",
+          "oklch(48% 0.019 257.3)",
+          "oklch(60% 0.019 257.3)",
+          "oklch(71% 0.019 257.3)",
+          "oklch(83% 0.019 257.3)",
+          "oklch(95% 0.019 257.3)"
+        ]
+      },
+      "ink-2-graphite": {
+        "role": "neutral",
+        "displayName": "Ink 2 (graphite)",
+        "canonical": "oklch(73.5% 0.015 254.6)",
+        "tonalRamp": [
+          "oklch(15% 0.015 254.6)",
+          "oklch(26% 0.015 254.6)",
+          "oklch(37% 0.015 254.6)",
+          "oklch(48% 0.015 254.6)",
+          "oklch(60% 0.015 254.6)",
+          "oklch(71% 0.015 254.6)",
+          "oklch(83% 0.015 254.6)",
+          "oklch(95% 0.015 254.6)"
+        ]
+      },
+      "etch": {
+        "role": "neutral",
+        "displayName": "Etch",
+        "canonical": "oklch(43.6% 0.019 257.3)",
+        "tonalRamp": [
+          "oklch(15% 0.019 257.3)",
+          "oklch(26% 0.019 257.3)",
+          "oklch(37% 0.019 257.3)",
+          "oklch(48% 0.019 257.3)",
+          "oklch(60% 0.019 257.3)",
+          "oklch(71% 0.019 257.3)",
+          "oklch(83% 0.019 257.3)",
+          "oklch(95% 0.019 257.3)"
+        ]
+      },
+      "etch-graphite": {
+        "role": "neutral",
+        "displayName": "Etch (graphite)",
+        "canonical": "oklch(65.7% 0.018 254.0)",
+        "tonalRamp": [
+          "oklch(15% 0.018 254.0)",
+          "oklch(26% 0.018 254.0)",
+          "oklch(37% 0.018 254.0)",
+          "oklch(48% 0.018 254.0)",
+          "oklch(60% 0.018 254.0)",
+          "oklch(71% 0.018 254.0)",
+          "oklch(83% 0.018 254.0)",
+          "oklch(95% 0.018 254.0)"
+        ]
+      },
+      "code-bg": {
+        "role": "neutral",
+        "displayName": "Code Ground",
+        "canonical": "oklch(96.7% 0.003 264.5)",
+        "tonalRamp": [
+          "oklch(15% 0.003 264.5)",
+          "oklch(26% 0.003 264.5)",
+          "oklch(37% 0.003 264.5)",
+          "oklch(48% 0.003 264.5)",
+          "oklch(60% 0.003 264.5)",
+          "oklch(71% 0.003 264.5)",
+          "oklch(83% 0.003 264.5)",
+          "oklch(95% 0.003 264.5)"
+        ]
+      },
+      "code-bg-graphite": {
+        "role": "neutral",
+        "displayName": "Code Ground (graphite)",
+        "canonical": "oklch(18.6% 0.007 258.4)",
+        "tonalRamp": [
+          "oklch(15% 0.007 258.4)",
+          "oklch(26% 0.007 258.4)",
+          "oklch(37% 0.007 258.4)",
+          "oklch(48% 0.007 258.4)",
+          "oklch(60% 0.007 258.4)",
+          "oklch(71% 0.007 258.4)",
+          "oklch(83% 0.007 258.4)",
+          "oklch(95% 0.007 258.4)"
+        ]
+      },
+      "solid-region": {
+        "role": "neutral",
+        "displayName": "Solid Region (media)",
+        "canonical": "oklch(36.3% 0.011 264.4)",
+        "tonalRamp": [
+          "oklch(15% 0.011 264.4)",
+          "oklch(26% 0.011 264.4)",
+          "oklch(37% 0.011 264.4)",
+          "oklch(48% 0.011 264.4)",
+          "oklch(60% 0.011 264.4)",
+          "oklch(71% 0.011 264.4)",
+          "oklch(83% 0.011 264.4)",
+          "oklch(95% 0.011 264.4)"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display",
+        "purpose": "The single thesis line on the wall page; uppercase, condensed."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Case title on the case page; uppercase, condensed."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Uppercase section heads on bezel bands (Case sheet, Source)."
+      },
+      "screen-title": {
+        "displayName": "Screen Title",
+        "purpose": "Case name on a screen plate, two-line clamp; 1.25rem on big screens."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Interface text and supporting sentences."
+      },
+      "prose": {
+        "displayName": "Prose",
+        "purpose": "README long-form text, max 72ch."
+      },
+      "control": {
+        "displayName": "Control",
+        "purpose": "Facet buttons, chips, console buttons."
+      },
+      "label": {
+        "displayName": "Etch",
+        "purpose": "Every measured or machine value: counts, levels, cells, ranges, t/T, spec keys."
+      }
+    },
+    "shadows": [],
+    "motion": [
+      {
+        "name": "ease",
+        "value": "cubic-bezier(0.16, 1, 0.3, 1)",
+        "purpose": "Single easing for all transitions."
+      },
+      {
+        "name": "screen-fade",
+        "value": "opacity 0.25s var(--ease)",
+        "purpose": "Preview video fading in over the thumbnail on hover or run."
+      },
+      {
+        "name": "chevron",
+        "value": "transform 0.2s var(--ease)",
+        "purpose": "Facet chevron rotating 180 degrees when its menu opens."
+      },
+      {
+        "name": "reduced-motion",
+        "value": "transition-duration: 0.01ms; no hover previews",
+        "purpose": "prefers-reduced-motion disables transitions and hover playback."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "wall-6",
+        "value": "1280px"
+      },
+      {
+        "name": "wall-4",
+        "value": "1080px"
+      },
+      {
+        "name": "wall-3",
+        "value": "900px"
+      },
+      {
+        "name": "thesis-stack",
+        "value": "860px"
+      },
+      {
+        "name": "case-stack",
+        "value": "760px"
+      },
+      {
+        "name": "console-static",
+        "value": "720px"
+      },
+      {
+        "name": "wall-2",
+        "value": "600px"
+      },
+      {
+        "name": "nav-compact",
+        "value": "560px"
+      }
+    ],
+    "media": {
+      "sequentialColormap": "cmc.lipari, lower 10% removed",
+      "divergingColormap": "cmc.vik, symmetric range",
+      "rangePercentiles": [
+        0.2,
+        99.8
+      ],
+      "jointFraction": 0.07,
+      "jointMaxPx": 2.2,
+      "jointMinPx": 0.6,
+      "jointDeltaLabL": 26.0,
+      "jointChromaScale": 0.85,
+      "legendStops": 11,
+      "sidecar": "media.json",
+      "themes": "identical 2D pixels in dark and light"
+    }
+  },
+  "components": [
+    {
+      "name": "Screen",
+      "kind": "card",
+      "refersTo": "screen",
+      "description": "One simulation on the wall: glass at the media aspect ratio over a bezel plate with a condensed title and one etched data line.",
+      "html": "<a class=\"ds-screen\" href=\"#\"><div class=\"ds-glass\" style=\"background:linear-gradient(135deg,#2b1a3a,#c25a3a 55%,#f3d9a4)\"></div><div class=\"ds-plate\"><span class=\"ds-title\">Double Mach reflection</span><span class=\"ds-etch\">ρ · 2D · Euler · 6 levels · 18,432 cells</span></div></a>",
+      "css": ".ds-screen{display:flex;flex-direction:column;width:260px;padding:6px;background:var(--bezel,#d3d7dc);color:var(--ink,#121418);text-decoration:none} .ds-glass{aspect-ratio:1.6;background-color:var(--screen-off,#dde0e4)} .ds-plate{display:flex;flex-direction:column;gap:2px;padding:8px 2px 4px} .ds-title{font:650 0.98rem/1.15 'Archivo Variable', Archivo, 'Arial Narrow', sans-serif;font-stretch:85%} .ds-etch{font:400 0.66rem 'Martian Mono', ui-monospace, Menlo, monospace;letter-spacing:0.04em;color:var(--etch,#4b525c);white-space:nowrap;overflow:hidden;text-overflow:ellipsis} .ds-screen:hover .ds-title{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:3px} .ds-screen:focus-visible{outline:2px solid var(--signal,#a23c26);outline-offset:-2px}"
+    },
+    {
+      "name": "Standby Screen",
+      "kind": "custom",
+      "refersTo": "screen",
+      "description": "Empty slot for a roadmap method: dashed glass, etched status, ink-2 title.",
+      "html": "<div class=\"ds-standby\"><div class=\"ds-sglass\"><span>Standby</span></div><div class=\"ds-splate\"><span class=\"ds-stitle\">Lattice Boltzmann</span><span class=\"ds-setch\">On the samurai roadmap</span></div></div>",
+      "css": ".ds-standby{width:200px;padding:6px;background:var(--bezel,#d3d7dc)} .ds-sglass{aspect-ratio:1;display:grid;place-items:center;border:1px dashed var(--bezel-hi,#c3c8cf)} .ds-sglass span{font:400 0.66rem 'Martian Mono', ui-monospace, Menlo, monospace;letter-spacing:0.1em;text-transform:uppercase;color:var(--etch,#4b525c)} .ds-splate{display:flex;flex-direction:column;gap:2px;padding:8px 2px 4px} .ds-stitle{font:650 0.98rem/1.15 'Archivo Variable', Archivo, 'Arial Narrow', sans-serif;font-stretch:85%;color:var(--ink-2,#474e58)} .ds-setch{font:400 0.66rem 'Martian Mono', ui-monospace, Menlo, monospace;letter-spacing:0.04em;color:var(--etch,#4b525c)}"
+    },
+    {
+      "name": "Facet Button",
+      "kind": "button",
+      "refersTo": "facet-button",
+      "description": "Console menu trigger; active state adds a signal border and a signal count.",
+      "html": "<div class=\"ds-row\"><button class=\"ds-facet\">Equation <svg viewBox=\"0 0 12 12\" width=\"12\" height=\"12\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\"><path d=\"m3 4.5 3 3 3-3\"/></svg></button><button class=\"ds-facet ds-on\">Method <span class=\"ds-n\">2</span> <svg viewBox=\"0 0 12 12\" width=\"12\" height=\"12\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\"><path d=\"m3 4.5 3 3 3-3\"/></svg></button></div>",
+      "css": ".ds-row{display:flex;gap:6px} .ds-facet{display:inline-flex;align-items:center;gap:6px;height:36px;padding:0 10px;border:1px solid var(--bezel-hi,#c3c8cf);border-radius:0;background:transparent;color:var(--ink,#121418);font:500 0.82rem 'Archivo Variable', Archivo, 'Arial Narrow', sans-serif;cursor:pointer} .ds-facet svg{color:var(--etch,#4b525c)} .ds-facet:hover{border-color:var(--etch,#4b525c)} .ds-facet:focus-visible{outline:2px solid var(--signal,#a23c26);outline-offset:2px} .ds-on{border-color:var(--signal,#a23c26)} .ds-n{font:500 0.62rem 'Martian Mono', ui-monospace, Menlo, monospace;color:var(--signal,#a23c26)}"
+    },
+    {
+      "name": "Run Button",
+      "kind": "button",
+      "refersTo": "run-button-pressed",
+      "description": "Transport toggle; pressed fills signal and swaps play for pause.",
+      "html": "<div class=\"ds-row2\"><button class=\"ds-run\" aria-pressed=\"false\" aria-label=\"Run\"><svg viewBox=\"0 0 16 16\" width=\"14\" height=\"14\" fill=\"currentColor\"><path d=\"M4 2.5v11l9-5.5z\"/></svg></button><button class=\"ds-run\" aria-pressed=\"true\" aria-label=\"Pause\"><svg viewBox=\"0 0 16 16\" width=\"14\" height=\"14\" fill=\"currentColor\"><path d=\"M3.5 2.5h3v11h-3zM9.5 2.5h3v11h-3z\"/></svg></button></div>",
+      "css": ".ds-row2{display:flex;gap:8px} .ds-run{display:inline-grid;place-items:center;width:36px;height:36px;padding:0;border:1px solid var(--bezel-hi,#c3c8cf);border-radius:0;background:transparent;color:var(--ink,#121418);cursor:pointer} .ds-run:hover{border-color:var(--etch,#4b525c)} .ds-run:focus-visible{outline:2px solid var(--signal,#a23c26);outline-offset:2px} .ds-run[aria-pressed=true]{background:var(--signal,#a23c26);border-color:var(--signal,#a23c26);color:var(--on-signal,#f4f5f7)}"
+    },
+    {
+      "name": "Search Field",
+      "kind": "input",
+      "refersTo": "search-input",
+      "description": "Console search in Martian Mono on room ground; focus turns the border signal.",
+      "html": "<label class=\"ds-search\"><svg viewBox=\"0 0 16 16\" width=\"15\" height=\"15\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\"><circle cx=\"7\" cy=\"7\" r=\"4.5\"/><path d=\"m10.5 10.5 3.5 3.5\"/></svg><input type=\"search\" placeholder=\"Search: equation, scheme, tag…\"></label>",
+      "css": ".ds-search{position:relative;display:block;width:300px} .ds-search svg{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--etch,#4b525c)} .ds-search input{width:100%;height:36px;padding:0 10px 0 32px;border:1px solid var(--bezel-hi,#c3c8cf);border-radius:0;background:var(--room,#e6e8eb);color:var(--ink,#121418);font:400 0.78rem 'Martian Mono', ui-monospace, Menlo, monospace} .ds-search input::placeholder{color:var(--etch,#4b525c)} .ds-search input:focus{border-color:var(--signal,#a23c26);outline:none}"
+    },
+    {
+      "name": "Filter Chip",
+      "kind": "chip",
+      "refersTo": "filter-chip",
+      "description": "Removable active filter: signal outline, mono key, value, close icon; hover fills signal.",
+      "html": "<button class=\"ds-chip\"><span class=\"ds-k\">Equation</span><span>Euler</span><svg viewBox=\"0 0 12 12\" width=\"11\" height=\"11\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\"><path d=\"m3 3 6 6M9 3 3 9\"/></svg></button>",
+      "css": ".ds-chip{display:inline-flex;align-items:center;gap:6px;height:26px;padding:0 6px 0 9px;border:1px solid var(--signal,#a23c26);border-radius:0;background:transparent;color:var(--ink,#121418);font:500 0.78rem 'Archivo Variable', Archivo, 'Arial Narrow', sans-serif;cursor:pointer} .ds-k{font:400 0.6rem 'Martian Mono', ui-monospace, Menlo, monospace;color:var(--etch,#4b525c)} .ds-chip:hover{background:var(--signal,#a23c26);color:var(--on-signal,#f4f5f7)} .ds-chip:hover .ds-k{color:inherit} .ds-chip:focus-visible{outline:2px solid var(--signal,#a23c26);outline-offset:2px}"
+    },
+    {
+      "name": "Top Bezel",
+      "kind": "nav",
+      "refersTo": "top-bezel",
+      "description": "Header band: lowercase wordmark with etched suffix, links in ink 2, square theme toggle.",
+      "html": "<header class=\"ds-top\"><a class=\"ds-mark\" href=\"#\">samurai <span>gallery</span></a><nav class=\"ds-nav\"><a href=\"#\" aria-current=\"page\">Cases</a><a href=\"#\">Source</a><a href=\"#\">Docs</a><button class=\"ds-toggle\" aria-label=\"Theme\"><svg viewBox=\"0 0 24 24\" width=\"16\" height=\"16\" fill=\"currentColor\"><path d=\"M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z\"/></svg></button></nav></header>",
+      "css": ".ds-top{display:flex;align-items:center;justify-content:space-between;gap:16px;height:52px;padding:0 20px;background:var(--bezel,#d3d7dc);border-bottom:1px solid var(--bezel-hi,#c3c8cf)} .ds-mark{display:flex;align-items:baseline;gap:10px;color:var(--ink,#121418);text-decoration:none;font:800 1.45rem/1 'Archivo Variable', Archivo, 'Arial Narrow', sans-serif;font-stretch:75%;letter-spacing:-0.01em} .ds-mark span{font:400 0.66rem 'Martian Mono', ui-monospace, Menlo, monospace;letter-spacing:0.12em;text-transform:uppercase;color:var(--etch,#4b525c)} .ds-nav{display:flex;align-items:center;gap:24px;font:500 0.9rem 'Archivo Variable', Archivo, 'Arial Narrow', sans-serif} .ds-nav a{color:var(--ink-2,#474e58);text-decoration:none} .ds-nav a:hover,.ds-nav a[aria-current=page]{color:var(--ink,#121418)} .ds-nav a:focus-visible,.ds-toggle:focus-visible{outline:2px solid var(--signal,#a23c26);outline-offset:2px} .ds-toggle{display:inline-grid;place-items:center;width:32px;height:32px;padding:0;border:1px solid var(--bezel-hi,#c3c8cf);border-radius:0;background:transparent;color:var(--ink-2,#474e58);cursor:pointer} .ds-toggle:hover{color:var(--ink,#121418);border-color:var(--etch,#4b525c)}"
+    },
+    {
+      "name": "Monitor Legend",
+      "kind": "custom",
+      "refersTo": "screen",
+      "description": "Case-page bar under the monitor: field symbol, colormap gradient from media.json, etched range and mesh stats.",
+      "html": "<div class=\"ds-bar\"><div class=\"ds-legend\"><span class=\"ds-sym\">ρ</span><span class=\"ds-grad\"></span><span class=\"ds-e\">0.125 to 1</span></div><div class=\"ds-stats\"><span>7 mesh levels</span><span>21,504 cells</span><span>120 frames</span></div></div>",
+      "css": ".ds-bar{display:flex;flex-wrap:wrap;justify-content:space-between;gap:10px 20px;width:640px;padding:10px 8px 4px;background:var(--bezel,#d3d7dc)} .ds-legend{display:grid;grid-template-columns:auto minmax(80px,240px) auto;align-items:center;gap:10px} .ds-sym{font:600 1rem 'Archivo Variable', Archivo, 'Arial Narrow', sans-serif;color:var(--ink,#121418)} .ds-grad{height:10px;border:1px solid var(--bezel-hi,#c3c8cf);background:linear-gradient(90deg,#1c1c4c,#3b4a6a,#5c6b62,#8a7a4e,#c78a5a,#f1bfa0,#fde6e6)} .ds-e,.ds-stats{font:400 0.66rem 'Martian Mono', ui-monospace, Menlo, monospace;letter-spacing:0.04em;color:var(--etch,#4b525c);font-variant-numeric:tabular-nums} .ds-stats{display:flex;gap:4px 16px}"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Visualization Wall",
+    "overview": "**Creative North Star: \"The Visualization Wall\"**\n\nThe site is the screen wall of a computing centre. Each simulation is a screen; the interface is the hardware around it: bezels, a console, small data etched under every screen. The site owns no color. All chroma comes from the figures, and one interface color marks what is active.\n\nTwo rooms carry the same wall. The graphite room (dark) is the default unless the visitor's OS asks for light; the daylight room (light grey) is its twin. Both are cool, near-neutral greys with a faint blue cast (hue about 255 to 265 in OKLCH, chroma under 0.02). The structure is tight and dense: a 6px bezel separates every screen, there are no radii, no shadows and no cards, and type is either condensed Archivo (the voice) or Martian Mono (the data).\n\nFigures are part of the world, not decoration on top of it. The field and its adaptive mesh are always shown together, with the mesh drawn as joints between cells (see Components: Media layer).",
+    "keyCharacteristics": [
+      "Screens carry the color; the room, bezels and type stay neutral.",
+      "One signal color, used only for active state, focus, selection and the pressed run button.",
+      "Square everything (0px radius), flat everything, 6px bezels as the only structure.",
+      "Condensed uppercase Archivo for headings; Martian Mono for every measured value.",
+      "Same figure in both themes: the field never changes color with the room."
+    ],
+    "rules": [
+      {
+        "name": "The No House Color Rule",
+        "body": "The site has no brand hue. If a surface needs color, it needs a figure, not a fill.",
+        "section": "colors"
+      },
+      {
+        "name": "The Signal Means Active Rule",
+        "body": "Lipari coral appears only where something is selected, focused, pressed or hovered for action. Never as decoration, never as a heading color, never as a background at rest.",
+        "section": "colors"
+      },
+      {
+        "name": "The Two Rooms Rule",
+        "body": "Every neutral exists as a daylight and a graphite pair under the same name; a new surface uses the token, never a raw grey.",
+        "section": "colors"
+      },
+      {
+        "name": "The Etched Data Rule",
+        "body": "Any measured or machine value (counts, levels, cells, ranges, file names, t/T) is set in Martian Mono with tabular figures. Prose words stay in Archivo.",
+        "section": "typography"
+      },
+      {
+        "name": "The Condensed Voice Rule",
+        "body": "Headings narrow, never widen: width 68 to 85% for display and titles; full width only for running text.",
+        "section": "typography"
+      },
+      {
+        "name": "The Bezel Gutter Rule",
+        "body": "Gutters between screens, around the wall, around the monitor, around the neighbour links and as the dropdown frame are all the same 6px, in the bezel color. Do not introduce a second gutter size for screen-to-screen spacing.",
+        "section": "layout"
+      },
+      {
+        "name": "The Flat Wall Rule",
+        "body": "Lift is expressed by a bezel frame, never by a shadow or blur.",
+        "section": "elevation"
+      },
+      {
+        "name": "The Square Corner Rule",
+        "body": "Radius is 0px for every surface and control the site draws.",
+        "section": "shapes"
+      }
+    ],
+    "dos": [
+      "Do let the figures carry all the color; keep every interface surface on room, bezel, glass and ink tokens.",
+      "Do reserve lipari coral for active, focused, selected and pressed state, and pair it with a non-hue mark (a count, a fill, an icon swap, an outline).",
+      "Do separate screens with the 6px bezel and frame any floating layer the same way.",
+      "Do set every measured value in Martian Mono with tabular figures, and keep it at 0.66rem or larger.",
+      "Do show the field and its mesh together, with joints from the galleria renderer, in every figure.",
+      "Do show what is missing: standby screens for roadmap methods, \"No signal\" glass for unrendered media."
+    ],
+    "donts": [
+      "Don't round corners, add box shadows, or wrap content in cards.",
+      "Don't use gradients outside the field legend.",
+      "Don't recolor a figure per theme or put a figure on its own background.",
+      "Don't draw the mesh as a uniform line overlay; it greys out the field.",
+      "Don't introduce a second interface hue."
+    ]
+  }
+}

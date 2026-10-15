@@ -50,7 +50,7 @@ bash infra/build_case.sh cases/getting-started/my-case ci
 ## Status
 
 - [x] Increment 1: repository foundations, case contract, build/run/render pipeline
-- [x] Increment 2: Astro website (editorial "revue" design, light/dark, theme-aware media)
+- [x] Increment 2: Astro website ("visualization wall" design, light/dark, faceted search)
 - [x] Increment 3: GitHub Actions CI/CD + Pages deploy
 - [x] Increment 4: v1 case set (13 finite-volume / compressible-Euler cases)
 

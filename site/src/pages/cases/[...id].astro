@@ -5,23 +5,36 @@ import {
   getCases,
   METHOD_LABELS,
   ADAPTATION_LABELS,
+  DIFFICULTY_LABELS,
+  REQUIRES_LABELS,
+  TAG_LABELS,
+  fieldSymbol,
+  titleize,
   type GalleryCase,
 } from "../../lib/cases";
 import { renderMarkdown } from "../../lib/markdown";
 
 export function getStaticPaths() {
-  return getCases().map((item) => ({
+  const cases = getCases();
+  return cases.map((item, i) => ({
     params: { id: item.id },
-    props: { item },
+    props: {
+      item,
+      prev: cases[(i - 1 + cases.length) % cases.length],
+      next: cases[(i + 1) % cases.length],
+    },
   }));
 }
 
-const { item } = Astro.props as { item: GalleryCase };
+const { item, prev, next } = Astro.props as { item: GalleryCase; prev: GalleryCase; next: GalleryCase };
 const base = import.meta.env.BASE_URL;
 const href = (p: string) => `${base.replace(/\/$/, "")}/${p.replace(/^\//, "")}`;
 
-const readmeHtml = renderMarkdown(item.readme);
-const methodLabels = item.methods.map((m) => METHOD_LABELS[m] ?? m).join(", ");
+// The page heading already shows the title: drop the README's own top-level
+// heading so it is not repeated.
+const readmeHtml = renderMarkdown(item.readme.replace(/^\s*#\s[^\n]*\n/, ""));
+const media = item.media;
+const aspect = media?.aspect ?? 1;
 
 // The samurai version (or engine + version) this case was validated against.
 const testedWith = item.engine
@@ -31,81 +44,137 @@ const testedWith = item.engine
   : item.samuraiRef
     ? `samurai ${item.samuraiRef}`
     : null;
+
+const fmt = (x: number) => {
+  const a = Math.abs(x);
+  if (a !== 0 && (a < 1e-2 || a >= 1e4)) return x.toExponential(2);
+  return Number(x.toPrecision(3)).toString();
+};
+const legend = media?.legend ? `linear-gradient(90deg, ${media.legend.join(", ")})` : null;
+
+const spec: [string, string][] = [
+  ["Method", item.methods.map((m) => METHOD_LABELS[m] ?? titleize(m)).join(", ")],
+  ["Equation", titleize(item.equation)],
+  ["Dimension", `${item.dimension}D`],
+  ["Mesh", ADAPTATION_LABELS[item.adaptation] ?? item.adaptation],
+  ["Level", DIFFICULTY_LABELS[item.difficulty] ?? item.difficulty],
+];
+if (item.requires.length) spec.push(["Requires", item.requires.map((r) => REQUIRES_LABELS[r] ?? r).join(", ")]);
+if (testedWith) spec.push(["Tested with", testedWith]);
+if (item.authors.length) spec.push(["Authors", item.authors.join(", ")]);
+if (item.tags.length) spec.push(["Tags", item.tags.map((t) => TAG_LABELS[t] ?? t).join(", ")]);
 ---
 
 <Base title={`${item.title} · samurai gallery`} description={item.summary}>
-  <section class="case-hero">
-    <div class="container">
-      <div class="breadcrumb">
-        <a href={href("/")}>Cases</a> · {item.category.replace(/-/g, " ")}
+  <div class="room">
+    <nav class="trail etch" aria-label="Breadcrumb">
+      <a href={href("/")}>Cases</a>
+      <span aria-hidden="true">/</span>
+      <a href={href(`/?equation=${item.equation}`)}>{titleize(item.equation)}</a>
+    </nav>
+
+    <header class="case-head">
+      <div>
+        <h1>{item.title}</h1>
+        <p>{item.summary}</p>
       </div>
-      <h1>{item.title}</h1>
-      <p class="summary">{item.summary}</p>
-    </div>
-  </section>
+    </header>
 
-  <div class="container case-layout">
-    <div class="content-col">
-      <div class="prose" set:html={readmeHtml} />
+    <figure class="monitor" style={`--ar:${aspect}`}>
+      <div class="glass">
+        {
+          media ? (
+            <video
+              data-dark={href(item.heroDarkUrl)}
+              data-light={href(item.heroLightUrl)}
+              data-poster-dark={href(item.thumbnailDarkUrl)}
+              data-poster-light={href(item.thumbnailLightUrl)}
+              data-eager="true"
+              src={href(item.heroDarkUrl)}
+              poster={href(item.thumbnailDarkUrl)}
+              autoplay
+              loop
+              muted
+              playsinline
+              aria-label={`${item.title}: animation of the ${media.dimension === 1 ? "solution" : "field and its adaptive mesh"}`}
+            />
+          ) : (
+            <span class="no-signal etch">No signal: media not rendered yet</span>
+          )
+        }
+      </div>
+      {
+        media && (
+          <figcaption class="monitor-bar">
+            {legend ? (
+              <div class="legend">
+                <span class="sym">{fieldSymbol(media.field)}</span>
+                <span class="bar" style={`background:${legend}`} role="img" aria-label={`Color scale of ${media.field} from ${fmt(media.range[0])} to ${fmt(media.range[1])}`} />
+                <span class="etch">{fmt(media.range[0])} to {fmt(media.range[1])}</span>
+              </div>
+            ) : (
+              <div class="legend">
+                <span class="sym">{fieldSymbol(media.field)}</span>
+                <span class="etch">range {fmt(media.range[0])} to {fmt(media.range[1])}</span>
+              </div>
+            )}
+            <span />
+            <div class="stats etch">
+              <span>{media.mesh.levels} mesh levels</span>
+              <span>{media.mesh.cells.toLocaleString("en-US")} cells</span>
+              <span>{media.frames} frames</span>
+            </div>
+          </figcaption>
+        )
+      }
+    </figure>
 
-      {item.references.length > 0 && (
-        <div class="references">
-          <h2 class="section-title">References</h2>
-          <ul>
+    <div class="case-body">
+      <article class="prose" set:html={readmeHtml} />
+
+      <aside class="spec" aria-label="Case sheet">
+        <h2>Case sheet</h2>
+        <dl>
+          {spec.map(([k, v]) => (
+            <div class="row">
+              <dt class="etch">{k}</dt>
+              <dd>{v}</dd>
+            </div>
+          ))}
+        </dl>
+        {item.references.length > 0 && (
+          <ul class="refs">
             {item.references.map((r) => (
               <li><a href={r.url} target="_blank" rel="noopener">{r.text}</a></li>
             ))}
           </ul>
-        </div>
+        )}
+      </aside>
+    </div>
+
+    <section class="source" aria-labelledby="source-title">
+      <div class="source-head">
+        <h2 id="source-title">Source</h2>
+        <span class="etch">{item.codeFile} · {item.code.split("\n").length} lines</span>
+      </div>
+      {item.engine && (
+        <p class="source-note">
+          This case runs on the {item.engine} solver. The code below is its scenario: initial and
+          boundary conditions. Fluxes, time integration and mesh adaptation come from the shared solver.
+        </p>
       )}
-    </div>
+      <Code code={item.code} lang="cpp" themes={{ light: "github-light", dark: "github-dark" }} defaultColor="light" />
+    </section>
 
-    <aside class="media-col">
-      <div class="media-frame">
-        <video
-          class="theme-media"
-          data-dark={href(item.heroDarkUrl)}
-          data-light={href(item.heroLightUrl)}
-          data-poster-dark={href(item.thumbnailDarkUrl)}
-          data-poster-light={href(item.thumbnailLightUrl)}
-          autoplay
-          loop
-          muted
-          playsinline
-        ></video>
-      </div>
-      <div class="meta-table">
-        <div class="row"><span class="k">Method</span><span class="v">{methodLabels}</span></div>
-        <div class="row"><span class="k">Equation</span><span class="v">{item.equation.replace(/-/g, " ")}</span></div>
-        <div class="row"><span class="k">Dimension</span><span class="v">{item.dimension}D</span></div>
-        <div class="row"><span class="k">Mesh</span><span class="v">{ADAPTATION_LABELS[item.adaptation] ?? item.adaptation}</span></div>
-        <div class="row"><span class="k">Difficulty</span><span class="v">{item.difficulty}</span></div>
-        {testedWith && (
-          <div class="row"><span class="k">Tested with</span><span class="v">{testedWith}</span></div>
-        )}
-        {item.authors.length > 0 && (
-          <div class="row"><span class="k">Authors</span><span class="v">{item.authors.join(", ")}</span></div>
-        )}
-      </div>
-    </aside>
+    <nav class="neighbours" aria-label="Other cases">
+      <a class="prev" href={href(`/cases/${prev.id}`)}>
+        <span class="etch">Previous screen</span>
+        <span class="t">{prev.title}</span>
+      </a>
+      <a class="next" href={href(`/cases/${next.id}`)}>
+        <span class="etch">Next screen</span>
+        <span class="t">{next.title}</span>
+      </a>
+    </nav>
   </div>
-
-  <!-- Source code spans the full width so long C++ lines stay readable. -->
-  <section class="container code-section">
-    <h2 class="section-title">Source code <span style="color:var(--text-dim);font-weight:400;font-size:1rem">{item.codeFile}</span></h2>
-    {item.engine && (
-      <p style="color:var(--text-muted);font-size:0.95rem;margin:-2px 0 14px;max-width:80ch">
-        Powered by the <strong>{item.engine}</strong> solver engine - the code below is
-        this case's scenario (initial &amp; boundary conditions); the flux, time
-        integration and mesh adaptation come from the shared engine.
-      </p>
-    )}
-    <div class="code-block">
-      <div class="code-head">
-        <span>{item.codeFile}</span>
-        <span>{item.code.split("\n").length} lines</span>
-      </div>
-      <Code code={item.code} lang="cpp" theme="github-dark" />
-    </div>
-  </section>
 </Base>
